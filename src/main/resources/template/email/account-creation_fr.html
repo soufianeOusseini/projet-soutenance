@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Création de Compte</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    .container { width: 600px; margin: 0 auto; padding: 20px; }
+    .header { text-align: center; margin-bottom: 20px; }
+    .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #777; }
+    .content { line-height: 1.6; }
+    .button { display: inline-block; padding: 10px 20px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <img th:if="${hasLogo}" th:src="${logoBase64}" alt="Logo" style="max-width: 200px;">
+    <h1 th:text="${companyName}">Transi-Flex</h1>
+  </div>
+
+  <div class="content">
+    <p>Bonjour <span th:text="${fullName}">Utilisateur</span>,</p>
+
+    <p>Votre compte a été créé avec succès dans notre système.</p>
+
+    <p>Voici vos identifiants de connexion :</p>
+    <ul>
+      <li>Nom d'utilisateur : <strong th:text="${username}">username</strong></li>
+      <li>Mot de passe provisoire : <strong th:text="${password}">password</strong></li>
+    </ul>
+
+    <p>Pour vous connecter, veuillez cliquer sur le lien ci-dessous :</p>
+    <p>
+      <a th:href="${loginUrl}" class="button">Se connecter</a>
+    </p>
+
+    <p>Lors de votre première connexion, il vous sera demandé de changer votre mot de passe.</p>
+
+    <p>Cordialement,<br>L'équipe Transi-Flex</p>
+  </div>
+
+  <div class="footer">
+    <p>
+      <span th:text="${companyName}">Transi-Flex</span><br>
+      <span th:if="${companyAddress}" th:text="${companyAddress}">Adresse</span><br>
+      <span th:if="${companyPhone}" th:text="${companyPhone}">Téléphone</span><br>
+      <span th:if="${companyEmail}" th:text="${companyEmail}">Email</span>
+    </p>
+  </div>
+</div>
+</body>
+</html>
