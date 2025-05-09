@@ -191,3 +191,6 @@ CREATE TABLE IF NOT EXISTS t_colis (
    FOREIGN KEY (compagnie_id) REFERENCES T_COMPANY(id),
    FOREIGN KEY (trajet_id) REFERENCES t_trajet(id)
 );
+
+--changeset a.rachad:add_email_admin_to_company
+ALTER TABLE t_company ADD COLUMN email_admin varchar(255);

@@ -45,6 +45,9 @@ public class Company {
     @Column(name = "EMAIL")
     private String email;
 
+    @Column(name = "EMAIL_ADMIN")
+    private String adminEmail;
+
     public Company(Long id) {
         this.id = id;
     }

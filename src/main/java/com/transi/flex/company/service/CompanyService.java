@@ -1,5 +1,7 @@
 package com.transi.flex.company.service;
 
+import com.transi.flex.account.dto.UserDTO;
+import com.transi.flex.account.service.UserService;
 import com.transi.flex.company.dto.CompanyDTO;
 import com.transi.flex.company.mapper.CompanyMapper;
 import com.transi.flex.company.model.Company;
@@ -17,6 +19,7 @@ public class CompanyService {
 
     private final CompanyRepository repository;
     private final CompanyMapper mapper;
+    private final UserService userService;
 
     public CompanyDTO getById(Long id) {
         return mapper.toDto(repository.findById(id)
@@ -31,6 +34,11 @@ public class CompanyService {
     @Transactional
     public CompanyDTO add(CompanyDTO dto) {
         Company model = mapper.toModel(dto);
+        if(dto.getId() == null) {
+            repository.save(model);
+            dto.setId(model.getId());
+            createCompanyAdmin(dto);
+        }
         return mapper.toDto(repository.save(model));
     }
 
@@ -53,5 +61,16 @@ public class CompanyService {
             throw new EntityNotFoundException("Company not found with id: " + id);
         }
         repository.deleteById(id);
+    }
+
+    private void createCompanyAdmin(CompanyDTO dto) {
+            UserDTO user = new UserDTO();
+            user.setEmail(dto.getAdminEmail());
+            user.setUsername(dto.getAdminEmail());
+            user.setFirstName(dto.getAdminFirstName());
+            user.setLastName(dto.getAdminLastName());
+            user.setPhone(dto.getAdminPhone());
+            userService.addAdminUser(user, dto);
+
     }
 }

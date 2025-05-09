@@ -6,7 +6,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -26,10 +25,11 @@ public class CompanyController {
         return ResponseEntity.ok(service.getAll());
     }
 
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<CompanyDTO> add(@RequestBody CompanyDTO dto) {
         return new ResponseEntity<>(service.add(dto), HttpStatus.CREATED);
     }
+
 
     @PutMapping
     public ResponseEntity<CompanyDTO> update(@RequestBody CompanyDTO dto) {
