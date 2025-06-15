@@ -134,4 +134,10 @@ public class AuthenticationController {
         AuthResponse authResponse = AuthResponse.builder().accessToken(accessToken).build();
         return ResponseEntity.ok().body(authResponse);
     }
+
+
+    @GetMapping("/current-user")
+    public UserDTO getCurrentUser(){
+        return userService.getCurrentUser();
+    }
 }

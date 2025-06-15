@@ -1,6 +1,7 @@
 package com.transi.flex.bus.service;
 
 import com.transi.flex.bus.dto.BusDTO;
+import com.transi.flex.bus.enums.BusStatus;
 import com.transi.flex.bus.mapper.BusMapper;
 import com.transi.flex.bus.model.Bus;
 import com.transi.flex.bus.repository.BusRepository;
@@ -26,10 +27,12 @@ public class BusService {
     private final CompanyRepository companyRepository;
 
     public BusDTO save(BusDTO dto){
-        Bus model = busRepository.save(mapper.toModel(dto));
+        Bus model = mapper.toModel(dto);
         Company company = companyRepository.findById(CompanyContextHolder.getCurrentId()).orElseThrow(() -> new EntityNotFoundException("Company not found"));
         model.setCompany(company);
-        return mapper.toDto(model);
+        model.setStatus(BusStatus.ACTIVE);
+        model.setSpaceAvailable(dto.getCapacity());
+        return mapper.toDto(busRepository.save(model));
     }
 
     public BusDTO getBusById(Long id){

@@ -34,7 +34,7 @@ public class Bus {
     @Column(name = "CAPACITY")
     private Integer capacity;
 
-    @Column(name = "NUMBER")
+    @Column(name = "NUMERO")
     private Integer number;
 
     @Column(name = "IMAGE")

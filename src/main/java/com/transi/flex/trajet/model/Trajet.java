@@ -1,5 +1,6 @@
 package com.transi.flex.trajet.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.transi.flex.bus.model.Bus;
 import com.transi.flex.colis.model.Colis;
 import com.transi.flex.reservation.model.Reservation;
@@ -57,6 +58,7 @@ public class Trajet {
     private Set<Reservation> reservations = new HashSet<>();
 
     @OneToMany(mappedBy = "trajet")
+    @JsonIgnore
     private Set<Colis> colis = new HashSet<>();
 
 }

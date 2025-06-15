@@ -46,4 +46,9 @@ public class CompanyController {
     public ResponseEntity<String> getCompanyLogo(@PathVariable Long id) {
         return ResponseEntity.ok("Logo placeholder");
     }
+
+    @GetMapping("/change-status/{id}")
+    public void changeStatus(@PathVariable(name = "id") Long id){
+        service.changeStatus(id);
+    }
 }

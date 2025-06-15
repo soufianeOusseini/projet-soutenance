@@ -42,7 +42,8 @@ public class SecurityConfig {
 				.authorizeHttpRequests(auth -> auth.requestMatchers("/authentication/login/**",
 								"/authentication/refreshToken/**", "/authentication/send-reset-password-code/**",
 								"/authentication/verify-reset-password-code/**", "/tmp-updaload", "/actuator/monitoring/**",
-								"/company/public/logo/**")
+								"/company/public/logo/**",
+								"/authentication/user/**")
 						.permitAll().anyRequest().authenticated());
 
 		http.authenticationProvider(authenticationProvider());

@@ -1,5 +1,8 @@
 package com.transi.flex.company.dto;
 
+import com.transi.flex.account.dto.UserDTO;
+import com.transi.flex.account.dto.UserSummary;
+import com.transi.flex.company.enums.CompanyStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,4 +27,7 @@ public class CompanyDTO {
     private String adminLastName;
     private String adminPhone;
     private String adminEmail;
+    private UserSummary admin;
+    private CompanyStatus status;
+
 }

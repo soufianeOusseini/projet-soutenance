@@ -29,7 +29,7 @@ public class Ticket {
     @Column(name = "PRIX", nullable = false)
     private Double prix;
 
-    @Column(name = "NUMBER", unique = true, nullable = false)
+    @Column(name = "NUMERO", unique = true, nullable = false)
     private String numero;
 
     @Enumerated(EnumType.STRING)
@@ -47,7 +47,7 @@ public class Ticket {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "TRAJET_ID", nullable = false)
+    @JoinColumn(name = "TRAJET", nullable = false)
     private Trajet trajet;
 
     @Enumerated(EnumType.STRING)

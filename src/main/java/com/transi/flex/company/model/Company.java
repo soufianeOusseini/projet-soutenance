@@ -2,6 +2,7 @@ package com.transi.flex.company.model;
 
 import com.transi.flex.bus.model.Bus;
 import com.transi.flex.colis.model.Colis;
+import com.transi.flex.company.enums.CompanyStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -47,6 +48,10 @@ public class Company {
 
     @Column(name = "EMAIL_ADMIN")
     private String adminEmail;
+
+    @Column(name = "STATUS")
+    @Enumerated(EnumType.STRING)
+    private CompanyStatus status;
 
     public Company(Long id) {
         this.id = id;

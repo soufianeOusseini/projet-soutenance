@@ -3,15 +3,18 @@ package com.transi.flex.company.service;
 import com.transi.flex.account.dto.UserDTO;
 import com.transi.flex.account.service.UserService;
 import com.transi.flex.company.dto.CompanyDTO;
+import com.transi.flex.company.enums.CompanyStatus;
 import com.transi.flex.company.mapper.CompanyMapper;
 import com.transi.flex.company.model.Company;
 import com.transi.flex.company.repository.CompanyRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.PersistenceUnit;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,7 +30,8 @@ public class CompanyService {
     }
 
     public List<CompanyDTO> getAll() {
-        return mapper.toDtos(repository.findAll());
+        List<Company> companies = repository.findAll();
+        return companies.stream().map(mapper::toDto).collect(Collectors.toList());
     }
 
 
@@ -37,6 +41,7 @@ public class CompanyService {
         if(dto.getId() == null) {
             repository.save(model);
             dto.setId(model.getId());
+            dto.setStatus(CompanyStatus.ACTIVE);
             createCompanyAdmin(dto);
         }
         return mapper.toDto(repository.save(model));
@@ -72,5 +77,14 @@ public class CompanyService {
             user.setPhone(dto.getAdminPhone());
             userService.addAdminUser(user, dto);
 
+    }
+
+    public void changeStatus(Long id){
+        Company company = repository.findById(id).orElseThrow(() -> new EntityNotFoundException("Company not found with id: " + id) );
+        switch (company.getStatus()){
+            case ACTIVE -> company.setStatus(CompanyStatus.INACTIVE);
+            case INACTIVE -> company.setStatus(CompanyStatus.ACTIVE);
+        }
+        repository.save(company);
     }
 }

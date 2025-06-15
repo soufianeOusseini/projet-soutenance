@@ -7,6 +7,7 @@ import com.transi.flex.ticket.enums.TicketStatus;
 import com.transi.flex.ticket.mapper.TicketMapper;
 import com.transi.flex.ticket.model.Ticket;
 import com.transi.flex.ticket.repository.TicketRepository;
+import com.transi.flex.trajet.dto.TrajetDTO;
 import com.transi.flex.trajet.model.Trajet;
 import com.transi.flex.trajet.repository.TrajetRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,38 +27,19 @@ public class TicketService {
     private final UserRepository userRepository;
     private final TrajetRepository trajetRepository;
 
-
     @Transactional
     public TicketDTO save(TicketDTO ticketDTO) {
 
+        Trajet trajet = trajetRepository.findById(ticketDTO.getTrajetId()).orElse(null);
         if (ticketDTO.getNumero() == null || ticketDTO.getNumero().isEmpty()) {
             ticketDTO.setNumero("TKT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         }
 
-        if (ticketDTO.getDate() == null) {
-            ticketDTO.setDate(LocalDate.now());
-        }
+        ticketDTO.setStatus(TicketStatus.EN_ATTENTE);
 
-        if (ticketDTO.getStatus() == null) {
-            ticketDTO.setStatus(TicketStatus.EN_ATTENTE);
-        }
-
-        Trajet trajet = trajetRepository.findById(ticketDTO.getTrajetId())
-                .orElseThrow(() -> new EntityNotFoundException("Trajet non trouvé avec l'ID: " + ticketDTO.getTrajetId()));
-
-        if (trajet.getBus() != null && (trajet.getBus().getSpaceAvailable() == null || trajet.getBus().getSpaceAvailable() <= 0)) {
-            throw new IllegalStateException("Aucune place disponible dans le bus pour ce trajet");
-        }
-
-        Ticket ticket = mapper.toModel(ticketDTO);
-
-        Ticket savedTicket = repository.save(ticket);
-
-        if (trajet.getBus() != null && trajet.getBus().getSpaceAvailable() != null) {
-            trajet.getBus().setSpaceAvailable(trajet.getBus().getSpaceAvailable() - 1);
-        }
-
-        return mapper.toDto(savedTicket);
+        Ticket ticket = mapper.toModel(ticketDTO) ;
+        ticket.setTrajet(trajet);
+        return mapper.toDto(repository.save(ticket));
     }
 
     public List<TicketDTO> getAll() {

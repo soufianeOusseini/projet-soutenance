@@ -1,5 +1,6 @@
 package com.transi.flex.colis.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.transi.flex.colis.enums.ColisStatus;
 import com.transi.flex.company.model.Company;
 import com.transi.flex.trajet.model.Trajet;
@@ -10,6 +11,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Getter
@@ -35,12 +38,6 @@ public class Colis {
     @Column(name = "HEURE_ENVOI")
     private LocalTime heureEnvoi;
 
-    @Column(name = "NOMBRE")
-    private Integer nombre;
-
-    @Column(name = "NATURE")
-    private String nature;
-
     @Column(name = "PRIX")
     private Double prix;
 
@@ -55,11 +52,14 @@ public class Colis {
     private Company company;
 
     @ManyToOne
-    @JoinColumn(name = "TRAJET_ID")
+    @JoinColumn(name = "TRAJET")
+    @JsonIgnore
     private Trajet trajet;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "STATUS")
     private ColisStatus status;
 
+    @OneToMany(mappedBy = "colis", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ColisItems> colisItems = new ArrayList<>();
 }
