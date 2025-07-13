@@ -29,5 +29,6 @@ public class CompanyDTO {
     private String adminEmail;
     private UserSummary admin;
     private CompanyStatus status;
+    private String logoPath;
 
 }

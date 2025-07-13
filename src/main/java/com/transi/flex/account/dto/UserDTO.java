@@ -46,6 +46,8 @@ public class UserDTO {
 
 	private CompanyDTO company;
 
+	private String profilePath;
+
 	public boolean hasProfile(UserProfile profile) {
 		return profiles.stream().anyMatch(p -> p.getName().equals(profile));
 	}

@@ -7,6 +7,8 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.transi.flex.file.enums.FileType;
+import com.transi.flex.file.service.FileUtility;
 import jakarta.persistence.EntityNotFoundException;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -16,6 +18,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 import org.thymeleaf.context.Context;
 
 import jakarta.transaction.Transactional;
@@ -47,6 +50,8 @@ public class UserService {
 	private final CompanyMapper companyMapper;
 	private final EmailService emailService;
 	private final MessageSource messageSource;
+	private final FileUtility fileUtility;
+
 
 	@Value("${mail.noreplay.from}")
 	private String fromEmail;
@@ -183,5 +188,16 @@ public class UserService {
 		var emailRequest = EmailRequest.builder().lang(user.getDefaultLang()).from(fromEmail).senderName(senderEmail)
 				.to(new String[] { user.getEmail() }).subject(subject).build();
 		emailService.send(context, "account-creation", emailRequest);
+	}
+
+	public void uploadProfile(MultipartFile path) throws Exception {
+		User user = mapper.toModel(getCurrentUser());
+		if (user.getProfilePath() !=null){
+			fileUtility.deleteFile(user.getProfilePath());
+		}
+		String profilePath = fileUtility.save(path, path.getOriginalFilename(),
+				FileType.USER_PROFILE);
+		user.setProfilePath(profilePath);
+		repository.save(user);
 	}
 }

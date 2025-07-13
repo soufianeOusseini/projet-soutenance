@@ -1,12 +1,17 @@
 package com.transi.flex.company.controller;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.transi.flex.company.dto.CompanyDTO;
 import com.transi.flex.company.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/company")
@@ -31,11 +36,14 @@ public class CompanyController {
     }
 
 
-    @PutMapping
-    public ResponseEntity<CompanyDTO> update(@RequestBody CompanyDTO dto) {
-        return ResponseEntity.ok(service.update(dto));
+    @PostMapping
+    public  ResponseEntity<CompanyDTO> update(@RequestParam(name = "logoPath", required = false) MultipartFile logoPath,
+                         @RequestParam("company") String companyStr) throws Exception {
+        ObjectMapper mapper = new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        CompanyDTO company = mapper.readValue(companyStr, CompanyDTO.class);
+        return ResponseEntity.ok(service.update(company, Optional.ofNullable(logoPath)));
     }
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.delete(id);

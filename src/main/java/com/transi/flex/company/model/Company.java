@@ -53,6 +53,9 @@ public class Company {
     @Enumerated(EnumType.STRING)
     private CompanyStatus status;
 
+    @Column(name = "LOGO_PATH")
+    private String logoPath;
+
     public Company(Long id) {
         this.id = id;
     }

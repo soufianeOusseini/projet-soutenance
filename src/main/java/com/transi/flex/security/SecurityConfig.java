@@ -43,7 +43,8 @@ public class SecurityConfig {
 								"/authentication/refreshToken/**", "/authentication/send-reset-password-code/**",
 								"/authentication/verify-reset-password-code/**", "/tmp-updaload", "/actuator/monitoring/**",
 								"/company/public/logo/**",
-								"/authentication/user/**")
+								"/authentication/user/**",
+								"/upload/**")
 						.permitAll().anyRequest().authenticated());
 
 		http.authenticationProvider(authenticationProvider());

@@ -22,6 +22,8 @@ public class UserSummary {
 
 	private String phone;
 
+	private String profilePath;
+
 	public String getFullName() {
 		return StringUtils.defaultIfBlank(firstName, "") + " " + StringUtils.defaultIfBlank(lastName, "");
 	}

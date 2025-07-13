@@ -218,3 +218,23 @@ CREATE TABLE IF NOT EXISTS t_colis_items (
 
 --changeset sousseini:add_column_status_to_company
 ALTER TABLE t_company ADD COLUMN IF NOT EXISTS status varchar(25);
+
+--changeset sousseini:add_column_logo_to_compagny
+ALTER TABLE t_company ADD COLUMN IF NOT EXISTS LOGO_PATH varchar(255);
+
+--changeset sousseini:create_table_t_app_file
+DROP TABLE IF EXISTS T_APP_FILE  CASCADE ;
+CREATE TABLE IF NOT EXISTS t_app_file (
+  id bigserial NOT NULL,
+  create_at timestamp NULL,
+  update_at timestamp NULL,
+  display_name varchar(255) NULL,
+    entity_id int8 NULL,
+    "path" varchar(255) NULL,
+    "size" int8 NULL,
+    "type" varchar(255) NULL
+    );
+CREATE INDEX T_APP_FILE_ENTITY_AND_TYPE ON T_APP_FILE USING btree (entity_id, type);
+
+--changeset sousseini:add_column_profil_path_to_user
+ALTER TABLE t_user ADD COLUMN IF NOT EXISTS PROFILE_PATH varchar(255);

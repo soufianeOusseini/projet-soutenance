@@ -1,10 +1,17 @@
 package com.transi.flex.account.controller;
 import java.util.List;
+import java.util.Optional;
+
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.transi.flex.company.dto.CompanyDTO;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
 import com.transi.flex.account.dto.UserDTO;
 import com.transi.flex.account.service.UserService;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/user")
@@ -41,5 +48,11 @@ public class UserController {
     @PutMapping("/update")
     public void update(@RequestBody UserDTO dto) {
         service.update(dto);
+    }
+
+    @PostMapping("upload-profile")
+    public void uploadProfile(@RequestParam(name = "profilePath") MultipartFile profile) throws Exception {
+        System.out.println("profile" + profile);
+        service.uploadProfile(profile);
     }
 }

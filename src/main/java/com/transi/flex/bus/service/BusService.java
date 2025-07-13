@@ -8,13 +8,17 @@ import com.transi.flex.bus.repository.BusRepository;
 import com.transi.flex.company.model.Company;
 import com.transi.flex.company.repository.CompanyRepository;
 import com.transi.flex.config.CompanyContextHolder;
+import com.transi.flex.file.enums.FileType;
+import com.transi.flex.file.service.FileUtility;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.Setter;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -26,12 +30,15 @@ public class BusService {
 
     private final CompanyRepository companyRepository;
 
-    public BusDTO save(BusDTO dto){
+    private final FileUtility fileUtility;
+
+    public BusDTO save(BusDTO dto, Optional<MultipartFile> image) throws Exception {
         Bus model = mapper.toModel(dto);
         Company company = companyRepository.findById(CompanyContextHolder.getCurrentId()).orElseThrow(() -> new EntityNotFoundException("Company not found"));
         model.setCompany(company);
         model.setStatus(BusStatus.ACTIVE);
         model.setSpaceAvailable(dto.getCapacity());
+        saveImage(image, model);
         return mapper.toDto(busRepository.save(model));
     }
 
@@ -52,5 +59,18 @@ public class BusService {
             throw new EntityNotFoundException("Colis not found with id: " + id);
         }
         busRepository.deleteById(id);
+    }
+
+    private void saveImage(Optional<MultipartFile> image,
+                          Bus bus) throws Exception {
+        if (bus.getImage() !=null){
+            fileUtility.deleteFile(bus.getImage());
+        }
+        if (image.isPresent()) {
+            String logoFilePath = fileUtility.save(image.get(), image.get().getOriginalFilename(),
+                    FileType.BUS_IMAGE);
+            bus.setImage(logoFilePath);
+        }
+
     }
 }

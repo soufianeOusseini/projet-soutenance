@@ -94,6 +94,8 @@ public class User {
     @JoinColumn(name = "COMPANY_ID", updatable = false)
     private Company company;
 
+    @Column(name = "PROFILE_PATH")
+    private String profilePath;
 
     public void addRole(Role role) {
         if (roles == null) {
