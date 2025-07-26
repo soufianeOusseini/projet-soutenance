@@ -5,6 +5,7 @@ public enum TicketStatus {
     UTILISE,
     ANNULE,
     EN_ATTENTE,
+    PAYE,
     EXPIRE;
 
 }

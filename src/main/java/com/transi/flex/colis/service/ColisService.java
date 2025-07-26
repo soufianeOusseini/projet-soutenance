@@ -26,7 +26,7 @@ public class ColisService {
     private final CompanyRepository companyRepository;
 
     public List<ColisDTO> getAll(){
-        return mapper.toDtos(repository.findAll());
+        return mapper.toDtos(repository.findByCompanyId(CompanyContextHolder.getCurrentId()));
     }
 
     public ColisDTO save(ColisDTO dto){

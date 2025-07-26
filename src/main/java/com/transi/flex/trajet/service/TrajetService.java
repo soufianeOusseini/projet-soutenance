@@ -1,5 +1,8 @@
 package com.transi.flex.trajet.service;
 
+import com.transi.flex.company.model.Company;
+import com.transi.flex.company.repository.CompanyRepository;
+import com.transi.flex.config.CompanyContextHolder;
 import com.transi.flex.trajet.dto.TrajetDTO;
 import com.transi.flex.trajet.mapper.TrajetMapper;
 import com.transi.flex.trajet.model.Trajet;
@@ -18,15 +21,19 @@ public class TrajetService {
 
     private final TrajetMapper mapper;
     private final TrajetRepository repository;
+    private final CompanyRepository companyRepository;
 
 
     public List<TrajetDTO> getAll(){
-        return mapper.toDtos(repository.findAll());
+        return mapper.toDtos(repository.findByCompanyId(CompanyContextHolder.getCurrentId()));
     }
 
     public TrajetDTO save(TrajetDTO dto){
-        Trajet trajet = repository.save(mapper.toModel(dto));
-        return mapper.toDto(trajet);
+        Company company = companyRepository.findById(CompanyContextHolder.getCurrentId()).get();
+        Trajet trajet = mapper.toModel(dto);
+        trajet.setCompany(company);
+        Trajet saved = repository.save(trajet);
+        return mapper.toDto(saved);
     }
 
     public TrajetDTO getTrajetById(Long id){

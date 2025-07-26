@@ -1,5 +1,6 @@
 package com.transi.flex.bus.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.transi.flex.bus.enums.BusStatus;
 import com.transi.flex.company.model.Company;
 import com.transi.flex.trajet.model.Trajet;
@@ -52,8 +53,10 @@ public class Bus {
 
     @ManyToOne
     @JoinColumn(name = "COMPANY_ID", nullable = false)
+    @JsonIgnore
     private Company company;
 
     @OneToMany(mappedBy = "bus")
+    @JsonIgnore
     private Set<Trajet> trajets = new HashSet<>();
 }

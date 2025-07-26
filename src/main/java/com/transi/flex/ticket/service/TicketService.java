@@ -35,8 +35,6 @@ public class TicketService {
             ticketDTO.setNumero("TKT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         }
 
-        ticketDTO.setStatus(TicketStatus.EN_ATTENTE);
-
         Ticket ticket = mapper.toModel(ticketDTO) ;
         ticket.setTrajet(trajet);
         return mapper.toDto(repository.save(ticket));

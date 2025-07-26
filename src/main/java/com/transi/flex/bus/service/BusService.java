@@ -48,7 +48,7 @@ public class BusService {
     }
 
     public List<BusDTO> getAll(){
-        List<Bus> buses = busRepository.findAll();
+        List<Bus> buses = busRepository.findByCompanyId(CompanyContextHolder.getCurrentId());
         return mapper.toDtos(buses);
     }
 

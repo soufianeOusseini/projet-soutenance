@@ -3,6 +3,7 @@ package com.transi.flex.trajet.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.transi.flex.bus.model.Bus;
 import com.transi.flex.colis.model.Colis;
+import com.transi.flex.company.model.Company;
 import com.transi.flex.reservation.model.Reservation;
 import com.transi.flex.ticket.model.Ticket;
 import com.transi.flex.trajet.enums.TrajetStatus;
@@ -49,16 +50,27 @@ public class Trajet {
 
     @ManyToOne
     @JoinColumn(name = "BUS_ID")
+    @JsonIgnore
     private Bus bus;
 
     @OneToMany(mappedBy = "trajet")
+    @JsonIgnore
     private Set<Ticket> tickets = new HashSet<>();
 
     @OneToMany(mappedBy = "trajet")
+    @JsonIgnore
     private Set<Reservation> reservations = new HashSet<>();
 
     @OneToMany(mappedBy = "trajet")
     @JsonIgnore
     private Set<Colis> colis = new HashSet<>();
+
+    @Column(name = "AMOUNT", nullable = false)
+    private Double amount;
+
+    @ManyToOne
+    @JoinColumn(name = "COMPANY_ID")
+    @JsonIgnore
+    private Company company;
 
 }

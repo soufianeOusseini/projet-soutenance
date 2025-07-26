@@ -166,6 +166,8 @@ public class UserService {
 		user.setRoles(userUpdated.getRoles());
 		user.setPhone(userUpdated.getPhone());
 		user.setDefaultLanguage(userUpdated.getDefaultLanguage());
+		user.setBirthDate(userUpdated.getBirthDate());
+		user.setBirthPlace(userUpdated.getBirthPlace());
 	}
 
 	@Transactional

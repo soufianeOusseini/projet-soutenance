@@ -238,3 +238,66 @@ CREATE INDEX T_APP_FILE_ENTITY_AND_TYPE ON T_APP_FILE USING btree (entity_id, ty
 
 --changeset sousseini:add_column_profil_path_to_user
 ALTER TABLE t_user ADD COLUMN IF NOT EXISTS PROFILE_PATH varchar(255);
+
+--changeset sousseini:add_column_company_to_trajet
+ALTER TABLE t_trajet ADD COLUMN IF NOT EXISTS company_id BIGINT;
+ALTER TABLE t_trajet ADD CONSTRAINT fk_trajet_company FOREIGN KEY (company_id) REFERENCES T_COMPANY(id);
+
+
+--changeset sousseini:add_column_amount_to_t_trajet
+ALTER TABLE t_trajet ADD COLUMN IF NOT EXISTS amount float8;
+
+
+--changeset sousseini:create_table_driver
+CREATE TABLE IF NOT EXISTS t_driver (
+    id bigserial NOT NULL,
+    user_id int8 NOT NULL,
+    driver_license_number varchar(50) NOT NULL,
+    license_expiry_date date NULL,
+    status varchar(20) NULL,
+    is_available boolean DEFAULT true,
+    CONSTRAINT pk_driver PRIMARY KEY (id),
+    CONSTRAINT uk_driver_user_id UNIQUE (user_id),
+    CONSTRAINT uk_driver_license_number UNIQUE (driver_license_number),
+    CONSTRAINT fk_driver_user FOREIGN KEY (user_id) REFERENCES t_user(id) ON DELETE CASCADE
+    );
+
+
+--changeset sousseini:add_column_to_t_user
+ALTER TABLE T_USER ADD COLUMN IF NOT EXISTS BIRTH_DATE date null;
+ALTER TABLE T_USER ADD COLUMN IF NOT EXISTS BIRTH_PLACE varchar(200) null;
+
+
+--changeset sousseini:add_column_company_to_driver
+ALTER TABLE t_driver ADD COLUMN IF NOT EXISTS company_id BIGINT;
+ALTER TABLE t_driver ADD CONSTRAINT fk_driver_company FOREIGN KEY (company_id) REFERENCES T_COMPANY(id);
+
+
+--changeset sousseini:create_table_trip_schedule
+CREATE TABLE IF NOT EXISTS t_trip_schedule (
+   id bigserial not null,
+   trajet_id BIGINT NOT NULL,
+   bus_id BIGINT NOT NULL,
+   driver_id BIGINT NOT NULL,
+   company_id BIGINT NOT NULL,
+   date_depart DATE NOT NULL,
+   heure_depart TIME NOT NULL,
+   nombre_places_totales INT NOT NULL,
+   nombre_places_disponibles INT NOT NULL,
+   prix DECIMAL(10, 2) NOT NULL,
+   status VARCHAR(20) DEFAULT 'ACTIVE',
+   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+   CONSTRAINT pk_trip_schedule PRIMARY KEY (id),
+   CONSTRAINT fk_trip_schedule_trajet FOREIGN KEY (trajet_id) REFERENCES t_trajet(id),
+   CONSTRAINT fk_trip_schedule_bus FOREIGN KEY (bus_id) REFERENCES t_bus(id),
+   CONSTRAINT fk_trip_schedule_driver FOREIGN KEY (driver_id) REFERENCES t_driver(id),
+   CONSTRAINT fk_trip_schedule_company FOREIGN KEY (company_id) REFERENCES t_company(id),
+
+   CONSTRAINT chk_places_totales CHECK (nombre_places_totales > 0),
+   CONSTRAINT chk_places_disponibles CHECK (nombre_places_disponibles >= 0),
+   CONSTRAINT chk_places_coherence CHECK (nombre_places_disponibles <= nombre_places_totales),
+   CONSTRAINT chk_prix CHECK (prix >= 0),
+   CONSTRAINT chk_status CHECK (status IN ('ACTIVE', 'CANCELLED', 'COMPLETED', 'FULL'))
+);

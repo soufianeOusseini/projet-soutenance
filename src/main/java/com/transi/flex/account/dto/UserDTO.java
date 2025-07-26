@@ -1,9 +1,15 @@
 package com.transi.flex.account.dto;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import jakarta.persistence.Column;
 import lombok.Getter;
 import lombok.Setter;
 import com.transi.flex.account.enums.UserProfile;
@@ -12,6 +18,7 @@ import com.transi.flex.account.repository.ProfileRepository;
 import com.transi.flex.common.utils.SpringContext;
 import com.transi.flex.company.dto.CompanyDTO;
 import com.transi.flex.setting.enums.Language;
+import org.apache.commons.collections4.CollectionUtils;
 
 @Getter
 @Setter
@@ -40,7 +47,7 @@ public class UserDTO {
 
 	private Set<RoleDTO> roles;
 
-	private Set<ProfileDTO> profiles;
+	private Set<ProfileDTO> profiles = new HashSet<>();
 
 	private UserProfile profile;
 
@@ -48,12 +55,16 @@ public class UserDTO {
 
 	private String profilePath;
 
+	private LocalDate birthDate;
+
+	private String birthPlace;
+
 	public boolean hasProfile(UserProfile profile) {
 		return profiles.stream().anyMatch(p -> p.getName().equals(profile));
 	}
 
 	public void addProfile(UserProfile profile) {
-		if (profiles.stream().anyMatch(p -> p.getName().equals(profile))) {
+		if (CollectionUtils.isNotEmpty(profiles) && profiles.stream().anyMatch(p -> p.getName().equals(profile))) {
 			return;
 		}
 		Profile model = SpringContext.getBean(ProfileRepository.class).findByName(profile);

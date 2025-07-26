@@ -2,6 +2,7 @@
 package com.transi.flex.account.model;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -96,6 +97,12 @@ public class User {
 
     @Column(name = "PROFILE_PATH")
     private String profilePath;
+
+    @Column(name = "BIRTH_DATE")
+    private LocalDate birthDate;
+
+    @Column(name = "BIRTH_PLACE")
+    private String birthPlace;
 
     public void addRole(Role role) {
         if (roles == null) {

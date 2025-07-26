@@ -37,4 +37,8 @@ public class TrajetDTO {
     private Set<Reservation> reservations = new HashSet<>();
 
     private Set<Colis> colis = new HashSet<>();
+
+    private Long companyId;
+
+    private Double amount;
 }
