@@ -52,8 +52,6 @@ public class TripSchedule {
     @Column(name = "HEURE_DEPART", nullable = false)
     private LocalTime heureDepart;
 
-    @Column(name = "NOMBRE_PLACES_TOTALES", nullable = false)
-    private Integer nombrePlacesTotales;
 
     @Column(name = "NOMBRE_PLACES_DISPONIBLES", nullable = false)
     private Integer nombrePlacesDisponibles;

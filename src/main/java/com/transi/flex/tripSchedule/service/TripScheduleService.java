@@ -55,16 +55,16 @@ public class TripScheduleService {
         return tripScheduleRepository.findById(id);
     }
 
-    public List<ScheduleDTO> getSchedulesByDateRange(LocalDate startDate, LocalDate endDate) {
-        return mapper.toDtos(tripScheduleRepository.findByDateRangeAndCompanyId(startDate, endDate, CompanyContextHolder.getCurrentId()));
-    }
+//    public List<ScheduleDTO> getSchedulesByDateRange(LocalDate startDate, LocalDate endDate) {
+//        return mapper.toDtos(tripScheduleRepository.findByDateRangeAndCompanyId(startDate, endDate, CompanyContextHolder.getCurrentId()));
+//    }
 
     public List<TripSchedule> getSchedulesByDate(LocalDate date) {
         return tripScheduleRepository.findByDateAndCompanyId(date, CompanyContextHolder.getCurrentId());
     }
 
     public TripSchedule createSchedule(TripScheduleDTO scheduleDTO) throws Exception {
-        // V�rifications de disponibilit�
+        // Vérifications de disponibilité
         if (!isBusAvailable(scheduleDTO.getBusId(), scheduleDTO.getDateDepart())) {
             throw new Exception("Bus non disponible pour cette date");
         }
@@ -80,8 +80,7 @@ public class TripScheduleService {
         schedule.setCompany(companyMapper.toModel(companyService.getById(CompanyContextHolder.getCurrentId())));
         schedule.setDateDepart(scheduleDTO.getDateDepart());
         schedule.setHeureDepart(scheduleDTO.getHeureDepart());
-        schedule.setNombrePlacesTotales(scheduleDTO.getNombrePlacesTotales());
-        schedule.setNombrePlacesDisponibles(scheduleDTO.getNombrePlacesTotales());
+        schedule.setNombrePlacesDisponibles(busMapper.toModel(busService.getBusById(scheduleDTO.getBusId())).getCapacity());
         schedule.setPrix(scheduleDTO.getPrix());
 
         return tripScheduleRepository.save(schedule);
@@ -90,12 +89,12 @@ public class TripScheduleService {
     public TripSchedule updateSchedule(Long id, TripScheduleDTO scheduleDTO) throws Exception {
         Optional<TripSchedule> existingSchedule = tripScheduleRepository.findById(id);
         if (!existingSchedule.isPresent()) {
-            throw new Exception("Horaire non trouv�");
+            throw new Exception("Horaire non trouvé");
         }
 
         TripSchedule schedule = existingSchedule.get();
 
-        // V�rifications si le bus ou chauffeur change
+        // Vérifications si le bus ou chauffeur change
         if (!schedule.getBus().getId().equals(scheduleDTO.getBusId())) {
             if (!isBusAvailable(scheduleDTO.getBusId(), scheduleDTO.getDateDepart())) {
                 throw new Exception("Bus non disponible pour cette date");
@@ -113,7 +112,6 @@ public class TripScheduleService {
         schedule.setTrajet(trajetMapper.toModel(trajetService.getTrajetById(scheduleDTO.getTrajetId())));
         schedule.setDateDepart(scheduleDTO.getDateDepart());
         schedule.setHeureDepart(scheduleDTO.getHeureDepart());
-        schedule.setNombrePlacesTotales(scheduleDTO.getNombrePlacesTotales());
         schedule.setPrix(scheduleDTO.getPrix());
 
         return tripScheduleRepository.save(schedule);
@@ -131,5 +129,16 @@ public class TripScheduleService {
     private boolean isDriverAvailable(Long driverId, LocalDate date) {
         List<TripSchedule> existingSchedules = tripScheduleRepository.findByDriverAndDate(driverId, date);
         return existingSchedules.isEmpty();
+    }
+
+    // Modifier la méthode existante pour ne récupérer que les planifications avec places disponibles
+    public List<ScheduleDTO> getSchedulesByDateRange(LocalDate startDate, LocalDate endDate) {
+        return mapper.toDtos(tripScheduleRepository.findAvailableSchedulesByDateRangeAndCompanyId(
+                startDate, endDate, CompanyContextHolder.getCurrentId()));
+    }
+
+    // Nouvelle méthode pour récupérer une planification spécifique
+    public Optional<TripSchedule> getScheduleByTrajetAndDate(Long trajetId, LocalDate date) {
+        return tripScheduleRepository.findByTrajetIdAndDate(trajetId, date);
     }
 }

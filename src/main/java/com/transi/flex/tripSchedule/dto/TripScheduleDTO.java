@@ -23,8 +23,6 @@ public class TripScheduleDTO {
 
     private LocalTime heureDepart;
 
-    private Integer nombrePlacesTotales;
-
     private Integer nombrePlacesDisponibles;
 
     private Double prix;

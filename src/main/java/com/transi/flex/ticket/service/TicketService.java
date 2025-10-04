@@ -1,21 +1,23 @@
 package com.transi.flex.ticket.service;
 
-import com.transi.flex.account.model.User;
 import com.transi.flex.account.repository.UserRepository;
+import com.transi.flex.config.CompanyContextHolder;
+import com.transi.flex.pdf.PdfTicketService;
 import com.transi.flex.ticket.dto.TicketDTO;
 import com.transi.flex.ticket.enums.TicketStatus;
 import com.transi.flex.ticket.mapper.TicketMapper;
 import com.transi.flex.ticket.model.Ticket;
 import com.transi.flex.ticket.repository.TicketRepository;
-import com.transi.flex.trajet.dto.TrajetDTO;
 import com.transi.flex.trajet.model.Trajet;
 import com.transi.flex.trajet.repository.TrajetRepository;
+import com.transi.flex.tripSchedule.dao.TripScheduleDAO;
+import com.transi.flex.tripSchedule.model.TripSchedule;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -26,47 +28,97 @@ public class TicketService {
     private final TicketMapper mapper;
     private final UserRepository userRepository;
     private final TrajetRepository trajetRepository;
+    private final TripScheduleDAO tripScheduleDAO;
+    private final PdfTicketService pdfTicketService; // Nouveau service pour PDF
 
     @Transactional
     public TicketDTO save(TicketDTO ticketDTO) {
-
+        // Récupérer le trajet
         Trajet trajet = trajetRepository.findById(ticketDTO.getTrajetId()).orElse(null);
+        if (trajet == null) {
+            throw new EntityNotFoundException("Trajet non trouvé avec l'ID: " + ticketDTO.getTrajetId());
+        }
+
+        // Récupérer la planification pour cette date et ce trajet
+        TripSchedule schedule = tripScheduleDAO.findByTrajetIdAndDate(ticketDTO.getTrajetId(), ticketDTO.getDate())
+                .orElseThrow(() -> new EntityNotFoundException("Aucune planification trouvée pour ce trajet à cette date"));
+
+        // Vérifier les places disponibles
+        if (schedule.getNombrePlacesDisponibles() <= 0) {
+            throw new IllegalStateException("Aucune place disponible pour ce trajet");
+        }
+
+        // Générer le numéro de ticket si nécessaire
         if (ticketDTO.getNumero() == null || ticketDTO.getNumero().isEmpty()) {
             ticketDTO.setNumero("TKT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         }
 
-        Ticket ticket = mapper.toModel(ticketDTO) ;
+        // Remplir automatiquement les données depuis la planification
+        ticketDTO.setPrix(schedule.getPrix());
+        ticketDTO.setHeureDepart(schedule.getHeureDepart());
+        ticketDTO.setDate(schedule.getDateDepart());
+
+        // Définir le statut et la date limite selon le type
+        if ("RESERVATION".equals(ticketDTO.getTypeTransaction())) {
+            ticketDTO.setStatus(TicketStatus.RESERVE);
+            // Date limite : 24h après la création (modifiable selon vos besoins)
+            ticketDTO.setDateLimitePaiement(LocalDateTime.now().plusHours(24));
+        } else {
+            ticketDTO.setStatus(TicketStatus.PAYE);
+            ticketDTO.setTypeTransaction("ACHAT");
+        }
+
+        Ticket ticket = mapper.toModel(ticketDTO);
         ticket.setTrajet(trajet);
-        return mapper.toDto(repository.save(ticket));
+        ticket.setCompany(schedule.getCompany());
+
+        // Sauvegarder le ticket
+        Ticket savedTicket = repository.save(ticket);
+
+        // Pour les achats immédiats, diminuer directement les places
+        if ("ACHAT".equals(ticketDTO.getTypeTransaction())) {
+            schedule.setNombrePlacesDisponibles(schedule.getNombrePlacesDisponibles() - 1);
+            tripScheduleDAO.save(schedule);
+        }
+
+        return mapper.toDto(savedTicket);
     }
 
-    public List<TicketDTO> getAll() {
-        return mapper.toDtos(repository.findAll());
+    @Transactional
+    public TicketDTO confirmReservation(Long ticketId, String modePaiement) {
+        Ticket ticket = repository.findById(ticketId)
+                .orElseThrow(() -> new EntityNotFoundException("Ticket non trouvé avec l'ID: " + ticketId));
+
+        if (ticket.getStatus() != TicketStatus.RESERVE) {
+            throw new IllegalStateException("Ce ticket n'est pas une réservation");
+        }
+
+        if (ticket.isReservationExpired()) {
+            throw new IllegalStateException("Cette réservation a expiré");
+        }
+
+        // Vérifier qu'il y a encore des places
+        TripSchedule schedule = tripScheduleDAO.findByTrajetIdAndDate(ticket.getTrajet().getId(), ticket.getDate())
+                .orElseThrow(() -> new EntityNotFoundException("Planification non trouvée"));
+
+        if (schedule.getNombrePlacesDisponibles() <= 0) {
+            throw new IllegalStateException("Plus de places disponibles pour ce trajet");
+        }
+
+        // Confirmer la réservation
+        ticket.setStatus(TicketStatus.PAYE);
+        ticket.setTypeTransaction("ACHAT");
+
+        // Diminuer les places disponibles
+        schedule.setNombrePlacesDisponibles(schedule.getNombrePlacesDisponibles() - 1);
+        tripScheduleDAO.save(schedule);
+
+        Ticket updatedTicket = repository.save(ticket);
+        return mapper.toDto(updatedTicket);
     }
-
-
-    public TicketDTO getTicketById(Long id) {
-        Ticket ticket = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Ticket non trouvé avec l'ID: " + id));
-        return mapper.toDto(ticket);
-    }
-
-
-    public List<TicketDTO> getTicketsByUserId(Long userId) {
-        List<Ticket> tickets = repository.findByUserId(userId);
-        return mapper.toDtos(tickets);
-    }
-
-
-    public List<TicketDTO> getTicketsByTrajetId(Long trajetId) {
-        List<Ticket> tickets = repository.findByTrajetId(trajetId);
-        return mapper.toDtos(tickets);
-    }
-
 
     @Transactional
     public TicketDTO cancelTicket(Long id) {
-
         Ticket ticket = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Ticket non trouvé avec l'ID: " + id));
 
@@ -74,21 +126,46 @@ public class TicketService {
             throw new IllegalStateException("Impossible d'annuler un ticket déjà utilisé");
         }
 
-        ticket.setStatus(TicketStatus.ANNULE);
-
-        if (ticket.getTrajet() != null && ticket.getTrajet().getBus() != null &&
-                ticket.getTrajet().getBus().getSpaceAvailable() != null) {
-            ticket.getTrajet().getBus().setSpaceAvailable(ticket.getTrajet().getBus().getSpaceAvailable() + 1);
+        if (ticket.getStatus() == TicketStatus.ANNULE) {
+            throw new IllegalStateException("Ce ticket est déjà annulé");
         }
 
+        // Récupérer la planification correspondante pour remettre la place
+        if (ticket.getStatus() == TicketStatus.PAYE || "ACHAT".equals(ticket.getTypeTransaction())) {
+            TripSchedule schedule = tripScheduleDAO.findByTrajetIdAndDate(ticket.getTrajet().getId(), ticket.getDate())
+                    .orElse(null);
+
+            if (schedule != null) {
+                schedule.setNombrePlacesDisponibles(schedule.getNombrePlacesDisponibles() + 1);
+                tripScheduleDAO.save(schedule);
+            }
+        }
+
+        ticket.setStatus(TicketStatus.ANNULE);
         Ticket updatedTicket = repository.save(ticket);
+
         return mapper.toDto(updatedTicket);
     }
 
+    public byte[] generateTicketPdf(Long ticketId) {
+        Ticket ticket = repository.findById(ticketId)
+                .orElseThrow(() -> new EntityNotFoundException("Ticket non trouvé avec l'ID: " + ticketId));
+
+        return pdfTicketService.generateTicketPdf(ticket);
+    }
+
+    public List<TicketDTO> getAll() {
+        return mapper.toDtos(repository.findByCompanyId(CompanyContextHolder.getCurrentId()));
+    }
+
+    public TicketDTO getTicketById(Long id) {
+        Ticket ticket = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Ticket non trouvé avec l'ID: " + id));
+        return mapper.toDto(ticket);
+    }
 
     @Transactional
     public TicketDTO useTicket(Long id) {
-
         Ticket ticket = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Ticket non trouvé avec l'ID: " + id));
 
@@ -101,26 +178,34 @@ public class TicketService {
         if (ticket.getStatus() == TicketStatus.EXPIRE) {
             throw new IllegalStateException("Impossible d'utiliser un ticket expiré");
         }
+        if (ticket.getStatus() == TicketStatus.RESERVE) {
+            throw new IllegalStateException("Ce ticket est une réservation non confirmée");
+        }
 
         ticket.setStatus(TicketStatus.UTILISE);
-
         Ticket updatedTicket = repository.save(ticket);
         return mapper.toDto(updatedTicket);
     }
 
+    // Méthode pour expirer automatiquement les réservations (à appeler via un job cron)
     @Transactional
-    public void deleteTicket(Long id) {
+    public void expireReservations() {
+        List<Ticket> expiredReservations = repository.findExpiredReservations(LocalDateTime.now());
 
-        Ticket ticket = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Ticket non trouvé avec l'ID: " + id));
-
-        if (ticket.getStatus() != TicketStatus.ANNULE && ticket.getStatus() != TicketStatus.UTILISE &&
-                ticket.getTrajet() != null && ticket.getTrajet().getBus() != null &&
-                ticket.getTrajet().getBus().getSpaceAvailable() != null) {
-            ticket.getTrajet().getBus().setSpaceAvailable(ticket.getTrajet().getBus().getSpaceAvailable() + 1);
+        for (Ticket ticket : expiredReservations) {
+            ticket.setStatus(TicketStatus.EXPIRE);
+            repository.save(ticket);
         }
+    }
 
-        repository.delete(ticket);
+    public List<TicketDTO> getTicketsByUserId(Long userId) {
+        List<Ticket> tickets = repository.findByUserId(userId);
+        return mapper.toDtos(tickets);
+    }
+
+    public List<TicketDTO> getTicketsByTrajetId(Long trajetId) {
+        List<Ticket> tickets = repository.findByTrajetId(trajetId);
+        return mapper.toDtos(tickets);
     }
 
     public List<TicketDTO> getTicketsByStatus(TicketStatus status) {
@@ -128,10 +213,8 @@ public class TicketService {
         return mapper.toDtos(tickets);
     }
 
-
     @Transactional
     public TicketDTO validateTicketByNumero(String numero) {
-
         Ticket ticket = repository.findByNumero(numero)
                 .orElseThrow(() -> new EntityNotFoundException("Ticket non trouvé avec le numéro: " + numero));
 

@@ -1,6 +1,8 @@
 package com.transi.flex.ticket.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.transi.flex.account.model.User;
+import com.transi.flex.company.model.Company;
 import com.transi.flex.reservation.enums.ModePaiement;
 import com.transi.flex.reservation.model.Reservation;
 import com.transi.flex.ticket.enums.TicketStatus;
@@ -12,6 +14,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @AllArgsConstructor
@@ -57,4 +60,30 @@ public class Ticket {
     @OneToOne(mappedBy = "ticket")
     private Reservation reservation;
 
+    @ManyToOne
+    @JoinColumn(name = "COMPANY_ID")
+    @JsonIgnore
+    private Company company;
+
+    @Column(name = "CLIENT_NOM", nullable = false)
+    private String clientNom;
+
+    @Column(name = "CLIENT_PRENOM", nullable = false)
+    private String clientPrenom;
+
+    @Column(name = "CLIENT_CONTACT", nullable = false)
+    private String clientContact;
+
+    @Column(name = "TYPE_TRANSACTION")
+    private String typeTransaction;
+
+    @Column(name = "DATE_LIMITE_PAIEMENT")
+    private LocalDateTime dateLimitePaiement;
+
+    public boolean isReservationExpired() {
+        return "RESERVATION".equals(typeTransaction)
+                && dateLimitePaiement != null
+                && LocalDateTime.now().isAfter(dateLimitePaiement)
+                && (status == TicketStatus.RESERVE || status == TicketStatus.EN_ATTENTE);
+    }
 }

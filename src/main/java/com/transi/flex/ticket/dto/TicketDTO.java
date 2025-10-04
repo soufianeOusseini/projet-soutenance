@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Getter
@@ -30,4 +31,25 @@ public class TicketDTO {
     private ModePaiement modePaiement;
 
     private Long reservationId;
+
+    // Informations client
+    private String clientNom;
+    private String clientPrenom;
+    private String clientContact;
+
+    // Type de transaction
+    private String typeTransaction; // "ACHAT" ou "RESERVATION"
+    private LocalDateTime dateLimitePaiement;
+
+    // Informations supplémentaires pour l'affichage
+    private String trajetInfo; // Ex: "Lomé → Kara"
+    private String companyName;
+
+    // Méthode utilitaire
+    public boolean isReservationExpired() {
+        return "RESERVATION".equals(typeTransaction)
+                && dateLimitePaiement != null
+                && LocalDateTime.now().isAfter(dateLimitePaiement)
+                && (status == TicketStatus.RESERVE || status == TicketStatus.EN_ATTENTE);
+    }
 }

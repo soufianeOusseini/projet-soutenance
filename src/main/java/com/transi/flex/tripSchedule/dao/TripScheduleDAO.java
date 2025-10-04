@@ -8,6 +8,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TripScheduleDAO extends JpaRepository<TripSchedule, Long> {
@@ -28,4 +29,22 @@ public interface TripScheduleDAO extends JpaRepository<TripSchedule, Long> {
     List<TripSchedule> findByCompany(@Param("companyId") Long companyId);
 
     List<TripSchedule> findByCompanyId(Long id);
+
+    // Méthodes à ajouter dans TripScheduleDAO
+
+    @Query("SELECT t FROM TripSchedule t WHERE t.trajet.id = :trajetId AND t.dateDepart = :date AND t.company.id = :companyId")
+    Optional<TripSchedule> findByTrajetIdAndDate(@Param("trajetId") Long trajetId,
+                                                 @Param("date") LocalDate date,
+                                                 @Param("companyId") Long companyId);
+
+    // Version simplifiée si vous utilisez CompanyContextHolder dans le service
+    @Query("SELECT t FROM TripSchedule t WHERE t.trajet.id = :trajetId AND t.dateDepart = :date")
+    Optional<TripSchedule> findByTrajetIdAndDate(@Param("trajetId") Long trajetId,
+                                                 @Param("date") LocalDate date);
+
+    // Méthode pour récupérer les planifications avec places disponibles > 0
+    @Query("SELECT t FROM TripSchedule t WHERE t.company.id = :companyId AND t.dateDepart BETWEEN :startDate AND :endDate AND t.nombrePlacesDisponibles > 0 ORDER BY t.dateDepart, t.heureDepart")
+    List<TripSchedule> findAvailableSchedulesByDateRangeAndCompanyId(@Param("startDate") LocalDate startDate,
+                                                                     @Param("endDate") LocalDate endDate,
+                                                                     @Param("companyId") Long companyId);
 }

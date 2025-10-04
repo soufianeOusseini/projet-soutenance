@@ -27,12 +27,9 @@ public class ScheduleDTO {
 
     private DriverDTO driver;
 
-
     private LocalDate dateDepart;
 
     private LocalTime heureDepart;
-
-    private Integer nombrePlacesTotales;
 
     private Integer nombrePlacesDisponibles;
 

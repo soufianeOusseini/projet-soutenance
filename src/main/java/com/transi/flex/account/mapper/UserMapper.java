@@ -1,7 +1,10 @@
 package com.transi.flex.account.mapper;
 
 import java.util.List;
+import java.util.Set;
 
+import com.transi.flex.account.enums.UserProfile;
+import com.transi.flex.account.model.Profile;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -21,9 +24,18 @@ public interface UserMapper {
 	User toModel(UserDTO dto);
 
 	@Mapping(target = "company", source = "company")
+	@Mapping(target = "profile", expression = "java(getFirstProfile(user.getProfiles()))")
 	UserDTO toDto(User user);
 
 	UserSummary toSummary(User user);
 
 	List<UserDTO> toDtos(List<User> users);
+
+
+	default UserProfile getFirstProfile(Set<Profile> profiles) {
+		if (profiles == null || profiles.isEmpty()) {
+			return null;
+		}
+		return profiles.iterator().next().getName();
+	}
 }

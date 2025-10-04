@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Ticket de Transport</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 10px; }
+        .ticket { max-width: 400px; margin: auto; border: 2px solid #2c3e50; border-radius: 10px; }
+        .header { background: #3498db; color: white; padding: 15px; text-align: center; border-radius: 8px 8px 0 0; }
+        .company { font-weight: bold; font-size: 18px; }
+        .title { font-size: 20px; margin-top: 5px; }
+        .number { font-size: 12px; margin-top: 5px; background: rgba(255,255,255,0.2); padding: 3px 6px; display: inline-block; border-radius: 10px; }
+        .body { padding: 15px; background: #f8f9fa; }
+        .section { margin-bottom: 15px; }
+        .section-title { font-weight: bold; margin-bottom: 5px; }
+        .info { display: flex; justify-content: space-between; }
+        .status { font-weight: bold; padding: 3px 10px; border-radius: 12px; color: white; text-transform: uppercase; }
+        .status-paye { background: #27ae60; }
+        .status-reserve { background: #f39c12; }
+        .status-annule { background: #e74c3c; }
+        .barcode { text-align: center; font-family: monospace; margin-top: 15px; padding: 10px; border: 2px dashed #bdc3c7; border-radius: 5px; }
+        .footer { text-align: center; font-size: 10px; padding: 5px; margin-top: 10px; color: #7f8c8d; }
+    </style>
+</head>
+<body>
+<div class="ticket">
+    <div class="header">
+        <div class="company" th:text="${ticket.company.name}">TRANSPORT COMPANY</div>
+        <div class="title">TICKET DE TRANSPORT</div>
+        <div class="number" th:text="'N° ' + ${ticket.numero}">N° TKT-12345678</div>
+    </div>
+    <div class="body">
+        <div class="section">
+            <div class="section-title">Voyage</div>
+            <div class="info"><span>De:</span> <span th:text="${ticket.trajet.villeDepart}">Lomé</span></div>
+            <div class="info"><span>À:</span> <span th:text="${ticket.trajet.villeArrive}">Kara</span></div>
+            <div class="info"><span>Date:</span> <span th:text="${ticket.date}">15/03/2024</span></div>
+            <div class="info"><span>Heure:</span> <span th:text="${ticket.heureDepart}">08:30</span></div>
+            <div class="info"><span>Prix:</span> <span th:text="${ticket.prix} + ' XOF'">5000 XOF</span></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Client</div>
+            <div class="info"><span>Nom:</span> <span th:text="${ticket.clientNom}">John DOE</span></div>
+            <div class="info"><span>Contact:</span> <span th:text="${ticket.clientContact}">+228 90 12 34 56</span></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Paiement</div>
+            <div class="info"><span>Mode:</span> <span th:text="${ticket.modePaiement}">ESPECES</span></div>
+            <div class="info"><span>Statut:</span>
+                <span class="status-badge"
+                      th:classappend="${ticket.status?.name() == 'PAYE' ? 'status-paye'
+                                        : (ticket.status?.name() == 'RESERVE' ? 'status-reserve'
+                                        : 'status-annule')}"
+                      th:text="${ticket.status?.name() == 'PAYE' ? 'PAYÉ'
+                                  : (ticket.status?.name() == 'RESERVE' ? 'RÉSERVÉ'
+                                  : (ticket.status?.name() == 'ANNULE' ? 'ANNULÉ'
+                                  : ticket.status?.name()))}">
+                        PAYÉ
+                    </span>
+            </div>
+            <div class="info" th:if="${ticket.typeTransaction == 'RESERVATION' && ticket.dateLimitePaiement != null}">
+                <span>Limite paiement:</span>
+                <span th:text="${ticket.dateLimitePaiement}">16/03/2024</span>
+            </div>
+        </div>
+
+        <div class="barcode">
+            <div th:text="${ticket.numero}">TKT-12345678</div>
+        </div>
+    </div>
+    <div class="footer">
+        Merci pour votre voyage !<br/>
+        Conservez ce ticket jusqu'à destination.<br/>
+        Émis le <span th:text="${#dates.format(#dates.createNow(),'dd/MM/yyyy HH:mm')}">15/03/2024 10:30</span>
+    </div>
+</div>
+</body>
+</html>

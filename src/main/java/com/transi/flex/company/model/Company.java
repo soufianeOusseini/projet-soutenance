@@ -1,5 +1,6 @@
 package com.transi.flex.company.model;
 
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.bus.model.Bus;
 import com.transi.flex.colis.model.Colis;
 import com.transi.flex.company.enums.CompanyStatus;
@@ -65,4 +66,10 @@ public class Company {
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
     private Set<Colis> colis = new HashSet<>();
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<Agency> agencies = new HashSet<>();
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<CompanyAccount> accounts = new HashSet<>();
 }
