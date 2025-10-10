@@ -1,4 +1,4 @@
-// Classe User
+
 package com.transi.flex.account.model;
 
 import java.time.Instant;

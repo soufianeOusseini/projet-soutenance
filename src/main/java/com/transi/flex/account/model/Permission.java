@@ -1,4 +1,3 @@
-// Classe Permission
 package com.transi.flex.account.model;
 
 import com.transi.flex.company.model.Company;

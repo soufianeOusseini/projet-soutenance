@@ -24,6 +24,7 @@ public class RoleService {
         return mapper.toDto(repository.save(model));
     }
 
+
     public RoleDTO getById(Long id) {
         return mapper.toDto(repository.findById(id).orElse(null));
     }
@@ -41,4 +42,6 @@ public class RoleService {
     public void update(RoleDTO dto) {
         repository.save(mapper.toModel(dto));
     }
+
+
 }

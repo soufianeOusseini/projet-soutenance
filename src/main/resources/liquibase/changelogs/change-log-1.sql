@@ -376,5 +376,26 @@ CREATE TABLE IF NOT EXISTS T_COMPANY_ACCOUNT (
     REFERENCES T_COMPANY(ID)
     );
 
+--changeset a.rachad:add_trips_permissions
+INSERT INTO t_permission ("name") VALUES ('TRIPS_READ');
+INSERT INTO t_permission ("name") VALUES ('TRIPS_ADD');
+INSERT INTO t_permission ("name") VALUES ('TRIPS_EDIT');
+INSERT INTO t_permission ("name") VALUES ('TRIPS_DELETE');
+
+--changeset a.rachad:add_menu_read_permissions
+INSERT INTO t_permission ("name") VALUES ('DASHBOARD_READ');
+INSERT INTO t_permission ("name") VALUES ('COMPANIES_READ');
+INSERT INTO t_permission ("name") VALUES ('BUS_READ');
+INSERT INTO t_permission ("name") VALUES ('COLIS_READ');
+INSERT INTO t_permission ("name") VALUES ('TICKETS_READ');
+INSERT INTO t_permission ("name") VALUES ('DRIVERS_READ');
+INSERT INTO t_permission ("name") VALUES ('PLANNING_READ');
+INSERT INTO t_permission ("name") VALUES ('COMPTES_READ');
+INSERT INTO t_permission ("name") VALUES ('ROLES_READ');
+INSERT INTO t_permission ("name") VALUES ('PERMISSIONS_READ');
+INSERT INTO t_permission ("name") VALUES ('USERS_READ');
+INSERT INTO t_permission ("name") VALUES ('CONFIGURATIONS_READ');
+INSERT INTO t_permission ("name") VALUES ('MY_COMPANY_READ');
+
 
 
