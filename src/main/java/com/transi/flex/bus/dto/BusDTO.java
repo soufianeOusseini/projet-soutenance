@@ -17,7 +17,7 @@ public class BusDTO {
 
     private Integer capacity;
 
-    private Integer number;
+    private String number;
 
     private String image;
 

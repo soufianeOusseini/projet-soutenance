@@ -2,6 +2,7 @@ package com.transi.flex.account.controller;
 
 import java.util.List;
 
+import com.transi.flex.account.dto.UserDTO;
 import org.springframework.web.bind.annotation.*;
 
 import lombok.RequiredArgsConstructor;
@@ -38,5 +39,10 @@ public class RoleController {
     @PutMapping("/update")
     public void update(@RequestBody RoleDTO dto) {
         service.update(dto);
+    }
+
+    @GetMapping("/company")
+    public List<RoleDTO> getByCompany() {
+        return service.getByCompany();
     }
 }

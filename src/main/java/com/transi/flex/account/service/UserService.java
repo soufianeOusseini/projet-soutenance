@@ -110,6 +110,7 @@ public class UserService {
 		return mapper.toDtos(repository.findAll());
 	}
 
+
 	public List<UserDTO> getUserAdmin() {
 		return mapper.toDtos(repository.findByCompanyIdIsNull());
 	}

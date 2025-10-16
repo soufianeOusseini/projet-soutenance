@@ -118,19 +118,21 @@ INSERT INTO t_role (name) VALUES ('ROLE_SUPER_ADMIN');
 
 --changeset sousseini:create_table_t_bus
 CREATE TABLE IF NOT EXISTS t_bus (
-    id bigserial NOT NULL,
+     id BIGSERIAL NOT NULL,
      plaque VARCHAR(255) NOT NULL,
-     model VARCHAR(255),
+    model VARCHAR(255),
     capacity INT,
-     numero VARCHAR(50) UNIQUE,
-     image VARCHAR(255),
-     type VARCHAR(100),
-     status VARCHAR(50),
-    SPACE_AVAILABLE INT,
+    numero VARCHAR(50),
+    image VARCHAR(255),
+    type VARCHAR(100),
+    status VARCHAR(50),
+    space_available INT,
     company_id BIGINT NOT NULL,
     CONSTRAINT t_bus_pkey PRIMARY KEY (id),
-     FOREIGN KEY (company_id) REFERENCES T_COMPANY(id)
-);
+    CONSTRAINT uk_bus_numero_company UNIQUE (numero, company_id),
+    FOREIGN KEY (company_id) REFERENCES t_company(id)
+    );
+
 
 --changeset sousseini:create_table_t_trajet
 CREATE TABLE IF NOT EXISTS t_trajet (
@@ -397,5 +399,5 @@ INSERT INTO t_permission ("name") VALUES ('USERS_READ');
 INSERT INTO t_permission ("name") VALUES ('CONFIGURATIONS_READ');
 INSERT INTO t_permission ("name") VALUES ('MY_COMPANY_READ');
 
-
-
+--changeset sousseini:drop_constraint_bus
+ALTER TABLE t_bus DROP CONSTRAINT IF EXISTS t_bus_numero_key;

@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface TrajetRepository extends JpaRepository<Trajet, Long> {
     List<Trajet> findByCompanyId(Long is);
+
+    long countByCompanyId(Long companyId);
 }

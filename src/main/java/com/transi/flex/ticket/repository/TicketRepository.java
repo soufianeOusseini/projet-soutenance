@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -40,4 +41,10 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
     // Tickets d'une date spécifique
     @Query("SELECT t FROM Ticket t WHERE t.date = :date AND t.trajet.id = :trajetId")
     List<Ticket> findByDateAndTrajetId(@Param("date") java.time.LocalDate date, @Param("trajetId") Long trajetId);
+
+    long countByDateGreaterThanEqualAndCompanyId(LocalDate date, Long companyId);
+
+    long countByDateBetweenAndCompanyId(LocalDate startDate, LocalDate endDate, Long companyId);
+
+    long countByCompanyId(Long companyId);
 }

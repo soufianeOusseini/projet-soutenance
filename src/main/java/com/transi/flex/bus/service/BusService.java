@@ -34,13 +34,24 @@ public class BusService {
 
     public BusDTO save(BusDTO dto, Optional<MultipartFile> image) throws Exception {
         Bus model = mapper.toModel(dto);
-        Company company = companyRepository.findById(CompanyContextHolder.getCurrentId()).orElseThrow(() -> new EntityNotFoundException("Company not found"));
+        Company company = companyRepository.findById(CompanyContextHolder.getCurrentId())
+                .orElseThrow(() -> new EntityNotFoundException("Company not found"));
         model.setCompany(company);
         model.setStatus(BusStatus.ACTIVE);
         model.setSpaceAvailable(dto.getCapacity());
         saveImage(image, model);
+
+        boolean exists = (dto.getId() == null)
+                ? busRepository.existsByNumberAndCompanyId(dto.getNumber(), company.getId())
+                : busRepository.existsByNumberAndCompanyIdAndIdNot(dto.getNumber(), company.getId(), dto.getId());
+
+        if (exists) {
+            throw new IllegalArgumentException("Un bus avec ce numéro existe déjà pour cette compagnie.");
+        }
+
         return mapper.toDto(busRepository.save(model));
     }
+
 
     public BusDTO getBusById(Long id){
         Bus bus = busRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("Bus not found"));

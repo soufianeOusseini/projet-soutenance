@@ -51,4 +51,9 @@ public class PermissionController {
     public List<String> getUserPermissions() {
         return service.getUserPermissions();
     }
+
+    @GetMapping("/company")
+    public List<PermissionDTO> getByCompany() {
+        return service.getByCompany();
+    }
 }

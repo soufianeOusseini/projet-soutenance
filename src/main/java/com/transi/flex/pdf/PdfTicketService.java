@@ -22,6 +22,8 @@ public class PdfTicketService {
             // Préparer le contexte Thymeleaf
             Context context = new Context(Locale.FRENCH);
             context.setVariable("ticket", ticket);
+            context.setVariable("formattedDate",
+                    ticket.getDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
             context.setVariable("dateFormatter", DateTimeFormatter.ofPattern("dd/MM/yyyy"));
             context.setVariable("timeFormatter", DateTimeFormatter.ofPattern("HH:mm"));
 

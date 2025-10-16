@@ -18,7 +18,9 @@ import java.util.Set;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "T_BUS")
+@Table(name = "T_BUS",uniqueConstraints = {
+        @UniqueConstraint(columnNames = {"NUMERO", "COMPANY_ID"})
+})
 public class Bus {
 
     @Id
@@ -36,7 +38,7 @@ public class Bus {
     private Integer capacity;
 
     @Column(name = "NUMERO")
-    private Integer number;
+    private String number;
 
     @Column(name = "IMAGE")
     private String image;

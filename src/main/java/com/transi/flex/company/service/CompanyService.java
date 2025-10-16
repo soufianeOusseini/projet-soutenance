@@ -1,5 +1,8 @@
 package com.transi.flex.company.service;
 import com.transi.flex.account.dto.UserDTO;
+import com.transi.flex.account.dto.UserSummary;
+import com.transi.flex.account.model.User;
+import com.transi.flex.account.repository.UserRepository;
 import com.transi.flex.account.service.UserService;
 import com.transi.flex.company.dto.CompanyDTO;
 import com.transi.flex.company.enums.CompanyStatus;
@@ -30,6 +33,7 @@ public class CompanyService {
     private final UserService userService;
     private final FileUtility fileUtility;
 
+    private final UserRepository userRepository;
     public CompanyDTO getById(Long id) {
         return mapper.toDto(repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Company not found with id: " + id)));
@@ -44,14 +48,17 @@ public class CompanyService {
     @Transactional
     public CompanyDTO add(CompanyDTO dto) {
         Company model = mapper.toModel(dto);
-        if(dto.getId() == null) {
+
+        if (dto.getId() == null) {
+            model.setStatus(CompanyStatus.ACTIVE);
             repository.save(model);
-            dto.setId(model.getId());
-            dto.setStatus(CompanyStatus.ACTIVE);
             createCompanyAdmin(dto);
+        } else {
+            repository.save(model);
         }
-        return mapper.toDto(repository.save(model));
+        return mapper.toDto(model);
     }
+
 
     @Transactional
     public CompanyDTO update(CompanyDTO dto, Optional<MultipartFile> logoPath) throws Exception {

@@ -6,6 +6,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.transi.flex.company.mapper.CompanyMapper;
+import com.transi.flex.company.model.Company;
+import com.transi.flex.company.service.CompanyService;
+import com.transi.flex.config.CompanyContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -40,11 +44,18 @@ public class PermissionService {
     @Autowired
     private PermissionMapper permissionMapper;
 
+    @Autowired
+    private CompanyService companyService;
+
+    @Autowired
+    private  CompanyMapper companyMapper;
+
     @Transactional
     public void addPermissionToRole(Long roleId, String permissionName) {
         Role role = roleRepository.findById(roleId).orElse(null);
+        Company company = companyMapper.toModel(companyService.getById(CompanyContextHolder.getCurrentId()));
         Permission permission = permissionRepository.findFirstByName(permissionName);
-
+        permission.setCompany(company);
         if (role != null && permission != null) {
             if (!role.getPermissions().contains(permission)) {
                 role.getPermissions().add(permission);
@@ -101,6 +112,11 @@ public class PermissionService {
     @Transactional
     public List<PermissionDTO> findAll() {
         return permissionMapper.toDtos(permissionRepository.findAll(Sort.by(Direction.DESC, "id")));
+    }
+
+    @Transactional
+    public List<PermissionDTO> getByCompany() {
+        return permissionMapper.toDtos(permissionRepository.findByCompanyId(Sort.by(Direction.DESC, "id"), CompanyContextHolder.getCurrentId()));
     }
 
     public List<String> getUserPermissions() {

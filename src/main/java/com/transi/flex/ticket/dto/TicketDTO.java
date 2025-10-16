@@ -2,6 +2,7 @@ package com.transi.flex.ticket.dto;
 
 import com.transi.flex.reservation.enums.ModePaiement;
 import com.transi.flex.ticket.enums.TicketStatus;
+import com.transi.flex.trajet.dto.TrajetDTO;
 import lombok.Getter;
 import lombok.Setter;
 

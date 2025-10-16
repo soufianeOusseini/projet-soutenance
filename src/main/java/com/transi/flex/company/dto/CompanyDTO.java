@@ -23,6 +23,7 @@ public class CompanyDTO {
     private String city;
     private String region;
     private String email;
+    private Long adminId;
     private String adminFirstName;
     private String adminLastName;
     private String adminPhone;
