@@ -19,8 +19,11 @@ public class JwtService {
 	public static final String SECRET = "5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437";
 	private static final long EXPIRATION = 1000L * 60 * 60 * 24 * 3;
 
-	public String generateToken(String userName, Long companyId) {
+	public String generateToken(String userName, Long companyId, Long agencyId) {
 		Map<String, Object> claims = new HashMap<>();
+		if (agencyId != null) {
+			claims.put("agencyId", agencyId);
+		}
 		return createToken(claims, userName, companyId);
 	}
 
@@ -74,5 +77,11 @@ public class JwtService {
 		var companyId = Jwts.parserBuilder().setSigningKey(getSignKey()).build().parseClaimsJws(token).getBody()
 				.getAudience();
 		return companyId == null ? null : Long.valueOf(companyId);
+	}
+
+	public Long getAgencyIdFromJwtToken(String token) {
+		Claims claims = extractAllClaims(token);
+		Object agencyId = claims.get("agencyId");
+		return agencyId == null ? null : Long.valueOf(agencyId.toString());
 	}
 }

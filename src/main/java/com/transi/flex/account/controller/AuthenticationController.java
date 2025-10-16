@@ -63,7 +63,13 @@ public class AuthenticationController {
 
     private AuthResponse buildAuthResponse(final User user) {
         Long companyId = user.isCompanyUser() ? user.getCompany().getId() : null;
-        String accessToken = jwtService.generateToken(user.getUsername(), companyId);
+        Long agencyId = null;
+
+        if (!user.isSuperAdmin() && user.getAgency() != null) {
+            agencyId = user.getAgency().getId();
+        }
+
+        String accessToken = jwtService.generateToken(user.getUsername(), companyId, agencyId);
         CompanyDTO company = companyId != null ? companyService.getById(companyId) : null;
         String companyName = company == null ? null : company.getName();
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
@@ -87,29 +93,6 @@ public class AuthenticationController {
         return buildAuthResponse(user);
     }
 
-    @PostMapping("/refreshToken")
-    public AuthResponse refreshToken(@RequestBody RefreshTokenRequest request) {
-        CompanyDTO company = request.getCompanyId() != null
-                ? companyService.getById(request.getCompanyId())
-                : null;
-        String companyName = company == null ? null : company.getName();
-        return refreshTokenService.findByToken(request.getToken())
-                .map(refreshTokenService::verifyExpiration)
-                .map(RefreshToken::getUser)
-                .map(user -> {
-                    Long companyId = user.isCompanyUser() ? user.getCompany().getId() : null;
-                    String accessToken = jwtService.generateToken(user.getUsername(), request.getCompanyId());
-                    RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUsername());
-                    userService.updateLastConnectionTime(user.getId());
-                    return AuthResponse.builder()
-                            .companyId(companyId)
-                            .accessToken(accessToken)
-                            .refreshToken(refreshToken.getToken())
-                            .company(companyName)
-                            .build();
-                })
-                .orElseThrow(() -> new RuntimeException("Refresh Token is not in DB..!!"));
-    }
 
     @PostMapping(value = "/send-reset-password-code")
     public ResponseEntity<?> sendResetPasswordCode(@RequestBody ResendCodeRequest resendCodeRequest) {

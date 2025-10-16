@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.company.model.Company;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -103,6 +104,10 @@ public class User {
 
     @Column(name = "BIRTH_PLACE")
     private String birthPlace;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "AGENCY_ID")
+    private Agency agency;
 
     public void addRole(Role role) {
         if (roles == null) {

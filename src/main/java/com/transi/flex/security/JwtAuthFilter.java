@@ -1,6 +1,8 @@
 package com.transi.flex.security;
 
 import java.io.IOException;
+
+import com.transi.flex.config.AgencyContextHolder;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -48,6 +50,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 					SecurityContextHolder.getContext().setAuthentication(authToken);
 					final Long companyId = jwtService.getAudienceFromJwtToken(token);
 					CompanyContextHolder.setCurrentId(companyId);
+					final Long agencyId = jwtService.getAgencyIdFromJwtToken(token);
+					AgencyContextHolder.setCurrentAgencyId(agencyId);
 				}
 			}
 		} catch (Exception e) {

@@ -119,6 +119,7 @@ public class PermissionService {
         return permissionMapper.toDtos(permissionRepository.findByCompanyId(Sort.by(Direction.DESC, "id"), CompanyContextHolder.getCurrentId()));
     }
 
+
     public List<String> getUserPermissions() {
         UserDTO userDTO = userService.getCurrentUser();
         if (userDTO == null) {
@@ -128,8 +129,24 @@ public class PermissionService {
         if (user.isEmpty()) {
             return Collections.emptyList();
         }
+
         List<String> permissions = new ArrayList<>();
+        if (user.get().isSuperAdmin()) {
+            return getAllCompanyPermissions(user.get().getCompany().getId());
+        }
         user.get().getRoles().forEach(role -> {
+            permissions.add(role.getName());
+            role.getPermissions().forEach(permission -> {
+                permissions.add(permission.getName());
+            });
+        });
+        return permissions;
+    }
+
+    private List<String> getAllCompanyPermissions(Long companyId) {
+        List<Role> companyRoles = roleRepository.findByCompanyId(companyId);
+        List<String> permissions = new ArrayList<>();
+        companyRoles.forEach(role -> {
             permissions.add(role.getName());
             role.getPermissions().forEach(permission -> {
                 permissions.add(permission.getName());

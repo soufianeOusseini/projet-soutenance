@@ -401,3 +401,7 @@ INSERT INTO t_permission ("name") VALUES ('MY_COMPANY_READ');
 
 --changeset sousseini:drop_constraint_bus
 ALTER TABLE t_bus DROP CONSTRAINT IF EXISTS t_bus_numero_key;
+
+--changeset a.rachad:add_agency_id_to_user
+ALTER TABLE T_USER ADD COLUMN IF NOT EXISTS AGENCY_ID BIGINT;
+ALTER TABLE T_USER ADD CONSTRAINT fk_user_agency FOREIGN KEY (AGENCY_ID) REFERENCES T_AGENCY(ID);
