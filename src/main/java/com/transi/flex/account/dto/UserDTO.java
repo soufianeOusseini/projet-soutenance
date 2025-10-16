@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonProperty.Access;
+import com.transi.flex.agency.dto.AgencyDTO;
 import jakarta.persistence.Column;
 import lombok.Getter;
 import lombok.Setter;
@@ -59,6 +60,7 @@ public class UserDTO {
 
 	private String birthPlace;
 
+	private Long agencyId;
 	public boolean hasProfile(UserProfile profile) {
 		return profiles.stream().anyMatch(p -> p.getName().equals(profile));
 	}

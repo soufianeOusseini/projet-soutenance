@@ -4,6 +4,8 @@ import com.transi.flex.agency.dto.AgencyDTO;
 import com.transi.flex.agency.dto.AgencyStatsDTO;
 import com.transi.flex.agency.enums.AgencyStatus;
 import com.transi.flex.agency.service.AgencyService;
+import com.transi.flex.company.mapper.CompanyMapperContext;
+import com.transi.flex.config.CompanyContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,9 +23,9 @@ public class AgencyController {
 
     private final AgencyService agencyService;
 
-    @GetMapping("/company/{companyId}")
-    public ResponseEntity<List<AgencyDTO>> getAgenciesByCompany(@PathVariable Long companyId) {
-        List<AgencyDTO> agencies = agencyService.getAgenciesByCompanyId(companyId);
+    @GetMapping("/company")
+    public ResponseEntity<List<AgencyDTO>> getAgenciesByCompany() {
+        List<AgencyDTO> agencies = agencyService.getAgenciesByCompanyId(CompanyContextHolder.getCurrentId());
         return ResponseEntity.ok(agencies);
     }
 

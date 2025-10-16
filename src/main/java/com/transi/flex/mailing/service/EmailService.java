@@ -44,7 +44,7 @@ public class EmailService {
     private String appUrl;
 
     private static final String TEMPLATE_FOLDER = "templates/emails/";
-    private static final String DEFAULT_LOGO_PATH = "static/images/transi-flex-logo.png";
+    private static final String DEFAULT_LOGO_PATH = "static/images/logo.png";
 
     @SneakyThrows
     public void send(Context context, String template, EmailRequest emailRequest) {

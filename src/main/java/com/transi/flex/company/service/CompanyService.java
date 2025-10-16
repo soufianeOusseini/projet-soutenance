@@ -52,6 +52,7 @@ public class CompanyService {
         if (dto.getId() == null) {
             model.setStatus(CompanyStatus.ACTIVE);
             repository.save(model);
+            dto.setId(model.getId());
             createCompanyAdmin(dto);
         } else {
             repository.save(model);

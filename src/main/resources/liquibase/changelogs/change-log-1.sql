@@ -17,8 +17,8 @@ CREATE TABLE IF NOT EXISTS t_company (
 
 --changeset sousseini:create_table_t_agency
 CREATE TABLE IF NOT EXISTS T_AGENCY (
-                                        ID BIGSERIAL PRIMARY KEY,
-                                        NAME VARCHAR(255) NOT NULL,
+    ID BIGSERIAL PRIMARY KEY,
+    NAME VARCHAR(255) NOT NULL,
     CODE VARCHAR(255) UNIQUE,
     ADDRESS TEXT,
     PHONE VARCHAR(50),
@@ -410,3 +410,14 @@ ALTER TABLE T_USER ADD CONSTRAINT fk_user_agency FOREIGN KEY (AGENCY_ID) REFEREN
 ALTER TABLE T_COLIS ADD COLUMN IF NOT EXISTS USER_ID BIGINT;
 ALTER TABLE T_COLIS ADD CONSTRAINT fk_user_colis FOREIGN KEY (USER_ID) REFERENCES T_COLIS(ID);
 
+--changeset sousseini:drop_constraint_user
+ALTER TABLE T_USER DROP CONSTRAINT IF EXISTS fk_user_company;
+ALTER TABLE T_USER ADD CONSTRAINT fk_user_companies FOREIGN KEY (company_id) REFERENCES t_company(id);
+
+--changeset sousseini:drop_constraint_agency
+ALTER TABLE t_agency DROP CONSTRAINT IF EXISTS fk_agency_company;
+ALTER TABLE t_agency ADD CONSTRAINT fk_agency_companies FOREIGN KEY (company_id) REFERENCES t_company(id);
+
+--changeset soussein:insert_profile
+INSERT INTO t_profile (name) VALUES ('ADMIN_SYSTEM');
+INSERT INTO t_profile (name) VALUES ('AGENCY');

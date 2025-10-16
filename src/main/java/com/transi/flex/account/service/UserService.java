@@ -7,6 +7,8 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.transi.flex.agency.dao.AgencyRepository;
+import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.file.enums.FileType;
 import com.transi.flex.file.service.FileUtility;
 import jakarta.persistence.EntityNotFoundException;
@@ -51,7 +53,7 @@ public class UserService {
 	private final EmailService emailService;
 	private final MessageSource messageSource;
 	private final FileUtility fileUtility;
-
+	private final AgencyRepository agencyRepository;
 
 	@Value("${mail.noreplay.from}")
 	private String fromEmail;
@@ -77,6 +79,9 @@ public class UserService {
 		if (CompanyContextHolder.getCurrentId() != null) {
 			model.setCompany(new Company(CompanyContextHolder.getCurrentId()));
 		}
+		if (AgencyContextHolder.getCurrentAgencyId() != null) {
+			model.setAgency(agencyRepository.findById(AgencyContextHolder.getCurrentAgencyId()).orElse(null));
+		}
 		User savedUser = repository.save(model);
 		if (dto.getId() == null) {
 			sendUserCreationEmail(savedUser, password);
@@ -95,6 +100,9 @@ public class UserService {
 		model.addProfile(UserProfile.COMPANY);
 		model.addRole(roleRepository.findByName("ROLE_ADMIN").get());
 		model.setCompany(companyMapper.toModel(company));
+		if (AgencyContextHolder.getCurrentAgencyId() !=null){
+			model.setAgency(agencyRepository.findById(AgencyContextHolder.getCurrentAgencyId()).orElse(null));
+		}
 		repository.save(model);
 		sendUserCreationEmail(model, password);
 	}
@@ -169,6 +177,7 @@ public class UserService {
 		user.setDefaultLanguage(userUpdated.getDefaultLanguage());
 		user.setBirthDate(userUpdated.getBirthDate());
 		user.setBirthPlace(userUpdated.getBirthPlace());
+		user.setAgency(agencyRepository.findById(dto.getAgencyId()).orElse(null));
 	}
 
 	@Transactional

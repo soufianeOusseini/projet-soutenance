@@ -40,7 +40,7 @@ public class ApplicationStartUpRunner implements ApplicationRunner {
         admin.setEmail("admin@transi-flex.com");
         admin.setPassword(passwordEncoder.encode("Deil2dQ3G6YHxpc"));
         admin.getRoles().add(role);
-        admin.addProfile(UserProfile.ADMIN);
+        admin.addProfile(UserProfile.ADMIN_SYSTEM);
         admin.setAgency(null);
         userRepository.save(admin);
         System.out.println("Admin user created successfully!");
