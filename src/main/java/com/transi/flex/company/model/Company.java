@@ -61,15 +61,4 @@ public class Company {
         this.id = id;
     }
 
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
-    private Set<Bus> bus = new HashSet<>();
-
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
-    private Set<Colis> colis = new HashSet<>();
-
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Agency> agencies = new HashSet<>();
-
-    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<CompanyAccount> accounts = new HashSet<>();
 }

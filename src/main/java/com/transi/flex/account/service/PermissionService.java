@@ -6,9 +6,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.transi.flex.agency.mapper.AgencyMapper;
+import com.transi.flex.agency.model.Agency;
+import com.transi.flex.agency.service.AgencyService;
 import com.transi.flex.company.mapper.CompanyMapper;
 import com.transi.flex.company.model.Company;
 import com.transi.flex.company.service.CompanyService;
+import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.config.CompanyContextHolder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
@@ -50,12 +54,18 @@ public class PermissionService {
     @Autowired
     private  CompanyMapper companyMapper;
 
+    @Autowired
+    private AgencyService agencyService;
+
+    @Autowired
+    private AgencyMapper agencyMapper;
+
     @Transactional
     public void addPermissionToRole(Long roleId, String permissionName) {
         Role role = roleRepository.findById(roleId).orElse(null);
-        Company company = companyMapper.toModel(companyService.getById(CompanyContextHolder.getCurrentId()));
+        Agency agency = agencyMapper.toModel(agencyService.getById(AgencyContextHolder.getCurrentAgencyId()));
         Permission permission = permissionRepository.findFirstByName(permissionName);
-        permission.setCompany(company);
+        permission.setAgency(agency);
         if (role != null && permission != null) {
             if (!role.getPermissions().contains(permission)) {
                 role.getPermissions().add(permission);
@@ -116,7 +126,7 @@ public class PermissionService {
 
     @Transactional
     public List<PermissionDTO> getByCompany() {
-        return permissionMapper.toDtos(permissionRepository.findByCompanyId(Sort.by(Direction.DESC, "id"), CompanyContextHolder.getCurrentId()));
+        return permissionMapper.toDtos(permissionRepository.findByAgencyId(Sort.by(Direction.DESC, "id"), AgencyContextHolder.getCurrentAgencyId()));
     }
 
 
@@ -132,7 +142,7 @@ public class PermissionService {
 
         List<String> permissions = new ArrayList<>();
         if (user.get().isSuperAdmin()) {
-            return getAllCompanyPermissions(user.get().getCompany().getId());
+            return getAllAgencyPermissions(user.get().getCompany().getId());
         }
         user.get().getRoles().forEach(role -> {
             permissions.add(role.getName());
@@ -143,8 +153,8 @@ public class PermissionService {
         return permissions;
     }
 
-    private List<String> getAllCompanyPermissions(Long companyId) {
-        List<Role> companyRoles = roleRepository.findByCompanyId(companyId);
+    private List<String> getAllAgencyPermissions(Long id) {
+        List<Role> companyRoles = roleRepository.findByAgencyId(id);
         List<String> permissions = new ArrayList<>();
         companyRoles.forEach(role -> {
             permissions.add(role.getName());

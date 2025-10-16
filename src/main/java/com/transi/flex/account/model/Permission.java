@@ -1,5 +1,6 @@
 package com.transi.flex.account.model;
 
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.company.model.Company;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,6 +28,6 @@ public class Permission {
 	private String name;
 
 	@ManyToOne
-	@JoinColumn(name = "COMPANY_ID", updatable = false)
-	private Company company;
+	@JoinColumn(name = "AGENCY_ID", updatable = false)
+	private Agency agency;
 }

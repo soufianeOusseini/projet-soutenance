@@ -1,13 +1,16 @@
 package com.transi.flex.company.service;
 
+import com.transi.flex.agency.dao.AgencyRepository;
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.company.dto.CompanyAccountDTO;
 import com.transi.flex.company.model.CompanyAccount;
 import com.transi.flex.company.model.Company;
-import com.transi.flex.company.model.CompanyAccountMapper;
+import com.transi.flex.company.mapper.CompanyAccountMapper;
 import com.transi.flex.company.repository.CompanyAccountRepository;
 import com.transi.flex.company.repository.CompanyRepository;
 import com.transi.flex.company.enums.AccountStatus;
 import com.transi.flex.company.enums.AccountType;
+import com.transi.flex.config.AgencyContextHolder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,8 +18,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,36 +28,34 @@ public class CompanyAccountService {
     private final CompanyAccountRepository accountRepository;
     private final CompanyRepository companyRepository;
     private final CompanyAccountMapper accountMapper;
+    private final AgencyRepository agencyRepository;
 
-    public List<CompanyAccountDTO> getAccountsByCompanyId(Long companyId) {
-        log.info("RÈcupÈration des comptes pour la compagnie ID: {}", companyId);
-        return accountMapper.toDtos(accountRepository.findByCompanyId(companyId));
+    public List<CompanyAccountDTO> getAccountsByAgencyId(Long id) {
+        return accountMapper.toDtos(accountRepository.findByAgencyId(id));
     }
 
 
     public CompanyAccountDTO getAccountById(Long id) {
-        log.info("RÈcupÈration du compte ID: {}", id);
         return accountMapper.toDto(accountRepository.findById(id).get());
     }
 
     public CompanyAccountDTO createAccount(CompanyAccountDTO accountDTO) {
-        log.info("CrÈation d'un nouveau compte: {}", accountDTO.getAccountName());
 
-        Company company = companyRepository.findById(accountDTO.getCompanyId())
-                .orElseThrow(() -> new IllegalArgumentException("Compagnie non trouvÈe"));
+        Agency agency = agencyRepository.findById(AgencyContextHolder.getCurrentAgencyId())
+                .orElseThrow(() -> new IllegalArgumentException("Agence non trouv√©e"));
 
         CompanyAccount account = convertToEntity(accountDTO);
-        account.setCompany(company);
+        account.setAgency(agency);
 
         CompanyAccount savedAccount = accountRepository.save(account);
         return accountMapper.toDto(savedAccount);
     }
 
     public CompanyAccountDTO updateAccount(Long id, CompanyAccountDTO accountDTO) {
-        log.info("Mise ‡ jour du compte ID: {}", id);
+        log.info("Mise √† jour du compte ID: {}", id);
 
         CompanyAccount existingAccount = accountRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Compte non trouvÈ"));
+                .orElseThrow(() -> new IllegalArgumentException("Compte non trouv√©"));
 
         updateAccountFromDTO(existingAccount, accountDTO);
         CompanyAccount updatedAccount = accountRepository.save(existingAccount);
@@ -66,9 +65,9 @@ public class CompanyAccountService {
     public void deleteAccount(Long id) {
         log.info("Suppression du compte ID: {}", id);
         CompanyAccount account = accountRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Compte non trouvÈ"));
+                .orElseThrow(() -> new IllegalArgumentException("Compte non trouv√©"));
 
-        // VÈrifier si ce n'est pas le compte principal
+        // V√©rifier si ce n'est pas le compte principal
         if (account.getType() == AccountType.PRINCIPAL) {
             throw new IllegalArgumentException("Impossible de supprimer le compte principal");
         }
@@ -80,7 +79,7 @@ public class CompanyAccountService {
         log.info("Changement du statut du compte ID: {} vers {}", id, status);
 
         CompanyAccount account = accountRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Compte non trouvÈ"));
+                .orElseThrow(() -> new IllegalArgumentException("Compte non trouv√©"));
 
         account.setStatus(status);
         CompanyAccount updatedAccount = accountRepository.save(account);
@@ -89,10 +88,10 @@ public class CompanyAccountService {
 
     @Transactional
     public CompanyAccountDTO updateBalance(Long id, BigDecimal newBalance) {
-        log.info("Mise ‡ jour du solde du compte ID: {} vers {}", id, newBalance);
+        log.info("Mise √† jour du solde du compte ID: {} vers {}", id, newBalance);
 
         CompanyAccount account = accountRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Compte non trouvÈ"));
+                .orElseThrow(() -> new IllegalArgumentException("Compte non trouv√©"));
 
         account.setBalance(newBalance);
         CompanyAccount updatedAccount = accountRepository.save(account);
@@ -104,14 +103,14 @@ public class CompanyAccountService {
         log.info("Transfert de {} du compte {} vers le compte {}", amount, fromAccountId, toAccountId);
 
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Le montant doit Ítre positif");
+            throw new IllegalArgumentException("Le montant doit √™tre positif");
         }
 
         CompanyAccount fromAccount = accountRepository.findById(fromAccountId)
-                .orElseThrow(() -> new IllegalArgumentException("Compte source non trouvÈ"));
+                .orElseThrow(() -> new IllegalArgumentException("Compte source non trouv√©"));
 
         CompanyAccount toAccount = accountRepository.findById(toAccountId)
-                .orElseThrow(() -> new IllegalArgumentException("Compte destination non trouvÈ"));
+                .orElseThrow(() -> new IllegalArgumentException("Compte destination non trouv√©"));
 
         if (fromAccount.getBalance().compareTo(amount) < 0) {
             throw new IllegalArgumentException("Solde insuffisant");
@@ -135,11 +134,11 @@ public class CompanyAccountService {
     }
 
     public long countActiveAccountsByCompany(Long companyId) {
-        return accountRepository.countByCompanyIdAndStatus(companyId, AccountStatus.ACTIVE);
+        return accountRepository.countByAgencyIdAndStatus(companyId, AccountStatus.ACTIVE);
     }
 
     public CompanyAccountDTO getPrincipalAccount(Long companyId) {
-        return accountMapper.toDto(accountRepository.findPrincipalAccountByCompanyId(companyId).get());
+        return accountMapper.toDto(accountRepository.findPrincipalAccountByAgencyId(companyId).get());
     }
 
 

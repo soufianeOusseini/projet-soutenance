@@ -1,9 +1,10 @@
 package com.transi.flex.dashboard.service;
 
+import com.transi.flex.agency.dao.AgencyRepository;
 import com.transi.flex.bus.repository.BusRepository;
 import com.transi.flex.colis.enums.ColisStatus;
 import com.transi.flex.colis.repository.ColisRepository;
-import com.transi.flex.config.CompanyContextHolder;
+import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.dashboard.dto.DashboardDTO;
 import com.transi.flex.ticket.enums.TicketStatus;
 import com.transi.flex.ticket.repository.TicketRepository;
@@ -26,6 +27,7 @@ public class DashboardService {
     private final ColisRepository colisRepository;
     private final TrajetRepository trajetRepository;
     private final BusRepository busRepository;
+    private final AgencyRepository agencyRepository;
 
     public DashboardDTO getDashboardData() {
         return DashboardDTO.builder()
@@ -38,15 +40,15 @@ public class DashboardService {
     }
 
     private DashboardDTO.StatistiquesGeneralesDTO getStatistiquesGenerales() {
-        Long companyId = CompanyContextHolder.getCurrentId();
-        long totalTrips = trajetRepository.countByCompanyId(companyId);
-        long totalColis = colisRepository.countByCompanyId(companyId);
+        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+        long totalTrips = trajetRepository.countByAgencyId(agencyId);
+        long totalColis = colisRepository.countByAgencyId(agencyId);
 
-        long totalTickets = ticketRepository.findByCompanyId(companyId).stream()
+        long totalTickets = ticketRepository.findByAgencyId(agencyId).stream()
                 .filter(ticket -> ticket.getStatus() == TicketStatus.PAYE)
                 .count();
 
-        long totalReservations = ticketRepository.findByCompanyId(companyId).stream()
+        long totalReservations = ticketRepository.findByAgencyId(agencyId).stream()
                 .filter(ticket -> ticket.getStatus() == TicketStatus.RESERVE)
                 .count();
 
@@ -54,7 +56,7 @@ public class DashboardService {
 
         LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0);
 
-        long ticketsThisMonth = ticketRepository.findByCompanyId(companyId).stream()
+        long ticketsThisMonth = ticketRepository.findByAgencyId(agencyId).stream()
                 .filter(ticket -> ticket.getStatus() == TicketStatus.PAYE
                         && ticket.getDate() != null
                         && (ticket.getDate().getYear() > startOfMonth.getYear()
@@ -62,7 +64,7 @@ public class DashboardService {
                         && ticket.getDate().getMonthValue() >= startOfMonth.getMonthValue())))
                 .count();
 
-        long ticketsLastMonth = ticketRepository.findByCompanyId(companyId).stream()
+        long ticketsLastMonth = ticketRepository.findByAgencyId(agencyId).stream()
                 .filter(ticket -> ticket.getStatus() == TicketStatus.PAYE
                         && ticket.getDate() != null
                         && ticket.getDate().getYear() == startOfMonth.minusMonths(1).getYear()
@@ -73,7 +75,7 @@ public class DashboardService {
                 ? ((ticketsThisMonth - ticketsLastMonth) / (double) ticketsLastMonth) * 100
                 : 0;
 
-        double totalEarnings = ticketRepository.findByCompanyId(companyId).stream()
+        double totalEarnings = ticketRepository.findByAgencyId(agencyId).stream()
                 .filter(ticket -> ticket.getStatus() == TicketStatus.PAYE)
                 .mapToDouble(ticket -> ticket.getPrix() != null ? ticket.getPrix() : 0)
                 .sum();
@@ -95,17 +97,17 @@ public class DashboardService {
     }
 
     private DashboardDTO.RevenusDTO getRevenus() {
-        Long companyId = CompanyContextHolder.getCurrentId();
+        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
         LocalDate today = LocalDate.now();
 
-        double revenusToday = ticketRepository.findByCompanyId(companyId).stream()
+        double revenusToday = ticketRepository.findByAgencyId(agencyId).stream()
                 .filter(t -> t.getStatus() == TicketStatus.PAYE
                         && t.getDate() != null
                         && t.getDate().equals(today))
                 .mapToDouble(t -> t.getPrix() != null ? t.getPrix() : 0)
                 .sum();
 
-        double revenusThisMonth = ticketRepository.findByCompanyId(companyId).stream()
+        double revenusThisMonth = ticketRepository.findByAgencyId(agencyId).stream()
                 .filter(t -> t.getStatus() == TicketStatus.PAYE
                         && t.getDate() != null
                         && t.getDate().getYear() == today.getYear()
@@ -117,7 +119,7 @@ public class DashboardService {
         for (int i = 6; i >= 0; i--) {
             LocalDate date = today.minusDays(i);
             final LocalDate checkDate = date;
-            double amount = ticketRepository.findByCompanyId(companyId).stream()
+            double amount = ticketRepository.findByAgencyId(agencyId).stream()
                     .filter(t -> t.getStatus() == TicketStatus.PAYE
                             && t.getDate() != null
                             && t.getDate().equals(checkDate))
@@ -138,11 +140,11 @@ public class DashboardService {
     }
 
     private DashboardDTO.ColisStatisticsDTO getColisStatistics() {
-        Long companyId = CompanyContextHolder.getCurrentId();
-        long totalColis = colisRepository.countByCompanyId(companyId);
-        long colisDelivered = colisRepository.countByStatusAndCompanyId(ColisStatus.LIVRE, companyId);
-        long colisPending = colisRepository.countByStatusAndCompanyId(ColisStatus.EN_ATTENTE, companyId);
-        long colisInTransit = colisRepository.countByStatusAndCompanyId(ColisStatus.EN_TRANSIT, companyId);
+        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+        long totalColis = colisRepository.countByAgencyId(agencyId);
+        long colisDelivered = colisRepository.countByStatusAndAgencyId(ColisStatus.LIVRE, agencyId);
+        long colisPending = colisRepository.countByStatusAndAgencyId(ColisStatus.EN_ATTENTE, agencyId);
+        long colisInTransit = colisRepository.countByStatusAndAgencyId(ColisStatus.EN_TRANSIT, agencyId);
 
         double deliveryRate = totalColis > 0 ? (colisDelivered / (double) totalColis) * 100 : 0;
 
@@ -157,8 +159,8 @@ public class DashboardService {
     }
 
     private List<DashboardDTO.TrajetRepartitionDTO> getTrajetRepartition() {
-        Long companyId = CompanyContextHolder.getCurrentId();
-        return trajetRepository.findByCompanyId(companyId).stream()
+        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+        return trajetRepository.findByAgencyId(agencyId).stream()
                 .collect(Collectors.groupingBy(
                         trajet -> trajet.getVilleDepart() + " ? " + trajet.getVilleArrive(),
                         Collectors.counting()
@@ -174,10 +176,10 @@ public class DashboardService {
     }
 
     private List<DashboardDTO.ActiviteRecenteDTO> getActivitesRecentes() {
-        Long companyId = CompanyContextHolder.getCurrentId();
+        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
         List<DashboardDTO.ActiviteRecenteDTO> activites = new ArrayList<>();
 
-        ticketRepository.findByCompanyId(companyId).stream()
+        ticketRepository.findByAgencyId(agencyId).stream()
                 .filter(ticket -> ticket.getStatus() == TicketStatus.PAYE)
                 .sorted((a, b) -> {
                     LocalDateTime dateA = a.getDate() != null ? a.getDate().atStartOfDay() : LocalDateTime.MIN;
@@ -209,7 +211,7 @@ public class DashboardService {
         long days = ChronoUnit.DAYS.between(dateTime, now);
 
         if (seconds < 60) {
-            return "à l'instant";
+            return "Ã  l'instant";
         } else if (minutes < 60) {
             return "il y a " + minutes + " minute" + (minutes > 1 ? "s" : "");
         } else if (hours < 24) {

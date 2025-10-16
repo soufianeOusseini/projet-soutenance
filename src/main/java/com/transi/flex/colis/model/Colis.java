@@ -1,6 +1,8 @@
 package com.transi.flex.colis.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.transi.flex.account.model.User;
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.colis.enums.ColisStatus;
 import com.transi.flex.company.model.Company;
 import com.transi.flex.trajet.model.Trajet;
@@ -48,8 +50,8 @@ public class Colis {
     private String lieuReception;
 
     @ManyToOne
-    @JoinColumn(name = "COMPANY_ID")
-    private Company company;
+    @JoinColumn(name = "AGENCY_ID")
+    private Agency agency;
 
     @ManyToOne
     @JoinColumn(name = "TRAJET")
@@ -62,4 +64,8 @@ public class Colis {
 
     @OneToMany(mappedBy = "colis", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ColisItems> colisItems = new ArrayList<>();
+
+    @ManyToOne
+    @JoinColumn(name = "USER_ID")
+    private User user;
 }

@@ -1,4 +1,4 @@
-package com.transi.flex.agency.repository;
+package com.transi.flex.agency.dao;
 
 import com.transi.flex.agency.model.Agency;
 import com.transi.flex.agency.enums.AgencyStatus;

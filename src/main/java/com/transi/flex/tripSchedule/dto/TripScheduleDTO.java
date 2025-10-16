@@ -17,7 +17,7 @@ public class TripScheduleDTO {
 
     private Long driverId;
 
-    private Long companyId;
+    private Long agencyId;
 
     private LocalDate dateDepart;
 

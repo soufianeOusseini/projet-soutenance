@@ -1,6 +1,8 @@
 package com.transi.flex.ticket.service;
 
 import com.transi.flex.account.repository.UserRepository;
+import com.transi.flex.colis.dto.ColisDTO;
+import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.config.CompanyContextHolder;
 import com.transi.flex.pdf.PdfTicketService;
 import com.transi.flex.ticket.dto.TicketDTO;
@@ -29,7 +31,7 @@ public class TicketService {
     private final UserRepository userRepository;
     private final TrajetRepository trajetRepository;
     private final TripScheduleDAO tripScheduleDAO;
-    private final PdfTicketService pdfTicketService; // Nouveau service pour PDF
+    private final PdfTicketService pdfTicketService;
 
     @Transactional
     public TicketDTO save(TicketDTO ticketDTO) {
@@ -70,7 +72,7 @@ public class TicketService {
 
         Ticket ticket = mapper.toModel(ticketDTO);
         ticket.setTrajet(trajet);
-        ticket.setCompany(schedule.getCompany());
+        ticket.setAgency(schedule.getAgency());
 
         // Sauvegarder le ticket
         Ticket savedTicket = repository.save(ticket);
@@ -155,7 +157,7 @@ public class TicketService {
     }
 
     public List<TicketDTO> getAll() {
-        return mapper.toDtos(repository.findByCompanyId(CompanyContextHolder.getCurrentId()));
+        return mapper.toDtos(repository.findByAgencyId(AgencyContextHolder.getCurrentAgencyId()));
     }
 
     public TicketDTO getTicketById(Long id) {
@@ -226,5 +228,9 @@ public class TicketService {
         }
 
         return mapper.toDto(ticket);
+    }
+
+    public List<TicketDTO> getByUser(Long id){
+        return mapper.toDtos(repository.findByUserId(id));
     }
 }

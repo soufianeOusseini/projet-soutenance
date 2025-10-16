@@ -1,5 +1,6 @@
 package com.transi.flex.company.repository;
 
+import com.transi.flex.colis.model.Colis;
 import com.transi.flex.company.enums.CompanyStatus;
 import com.transi.flex.company.model.Company;
 import org.springframework.data.jpa.repository.JpaRepository;

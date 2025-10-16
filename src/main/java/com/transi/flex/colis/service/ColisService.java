@@ -1,19 +1,19 @@
 package com.transi.flex.colis.service;
 
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.colis.dto.ColisDTO;
 import com.transi.flex.colis.enums.ColisStatus;
 import com.transi.flex.colis.mapper.ColisMapper;
 import com.transi.flex.colis.model.Colis;
 import com.transi.flex.colis.repository.ColisRepository;
-import com.transi.flex.company.model.Company;
 import com.transi.flex.company.repository.CompanyRepository;
-import com.transi.flex.config.CompanyContextHolder;
+import com.transi.flex.config.AgencyContextHolder;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import com.transi.flex.agency.dao.AgencyRepository;
 
 import java.util.List;
 
@@ -24,16 +24,17 @@ public class ColisService {
     private final ColisRepository repository;
     private final ColisMapper mapper;
     private final CompanyRepository companyRepository;
+    private final AgencyRepository agencyRepository;
 
     public List<ColisDTO> getAll(){
-        return mapper.toDtos(repository.findByCompanyId(CompanyContextHolder.getCurrentId()));
+        return mapper.toDtos(repository.findByAgencyId(AgencyContextHolder.getCurrentAgencyId()));
     }
 
     public ColisDTO save(ColisDTO dto){
         Colis colis = mapper.toModel(dto);
-        Company company = companyRepository.findById(CompanyContextHolder.getCurrentId())
-                .orElseThrow(() -> new EntityNotFoundException("Company not found"));
-        colis.setCompany(company);
+        Agency agency = agencyRepository.findById(AgencyContextHolder.getCurrentAgencyId())
+                .orElseThrow(() -> new EntityNotFoundException("Agency not found"));
+        colis.setAgency(agency);
         colis.setStatus(ColisStatus.EN_ATTENTE);
         if (CollectionUtils.isNotEmpty(colis.getColisItems())) {
             colis.getColisItems().forEach(items -> {
@@ -59,15 +60,15 @@ public class ColisService {
     }
 
     /**
-     * Nouvelle méthode pour mettre à jour le statut d'un colis
+     * Nouvelle mÃ©thode pour mettre Ã  jour le statut d'un colis
      */
     @Transactional
     public ColisDTO updateStatus(Long id, ColisStatus newStatus) {
         Colis colis = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Colis not found with id: " + id));
 
-        // Vérifier que le colis appartient à la bonne compagnie
-        if (!colis.getCompany().getId().equals(CompanyContextHolder.getCurrentId())) {
+        // VÃ©rifier que le colis appartient Ã  la bonne compagnie
+        if (!colis.getAgency().getId().equals(AgencyContextHolder.getCurrentAgencyId())) {
             throw new EntityNotFoundException("Colis not found");
         }
 
@@ -79,11 +80,11 @@ public class ColisService {
     }
 
     /**
-     * Méthode pour valider les transitions de statut
+     * MÃ©thode pour valider les transitions de statut
      */
     private void validateStatusTransition(ColisStatus currentStatus, ColisStatus newStatus) {
         if (currentStatus == null) {
-            return; // Première assignation de statut
+            return; // PremiÃ¨re assignation de statut
         }
 
         boolean isValidTransition = false;
@@ -96,11 +97,11 @@ public class ColisService {
                 isValidTransition = newStatus == ColisStatus.LIVRE || newStatus == ColisStatus.ANNULE;
                 break;
             case LIVRE:
-                // Un colis livré ne peut généralement pas changer de statut
+                // Un colis livrÃ© ne peut gÃ©nÃ©ralement pas changer de statut
                 isValidTransition = false;
                 break;
             case ANNULE:
-                // Un colis annulé peut être remis en attente
+                // Un colis annulÃ© peut Ãªtre remis en attente
                 isValidTransition = newStatus == ColisStatus.EN_ATTENTE;
                 break;
         }
@@ -114,7 +115,7 @@ public class ColisService {
     }
 
     /**
-     * Méthode pour obtenir les statuts de transition possibles
+     * MÃ©thode pour obtenir les statuts de transition possibles
      */
     public List<ColisStatus> getAvailableStatusTransitions(Long id) {
         Colis colis = repository.findById(id)
@@ -129,5 +130,9 @@ public class ColisService {
             case ANNULE -> List.of(ColisStatus.EN_ATTENTE);
             default -> List.of();
         };
+    }
+
+    public List<ColisDTO> getByUser(Long id){
+        return mapper.toDtos(repository.findByUserId(id));
     }
 }

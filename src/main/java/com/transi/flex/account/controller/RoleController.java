@@ -41,8 +41,8 @@ public class RoleController {
         service.update(dto);
     }
 
-    @GetMapping("/company")
+    @GetMapping("/agency")
     public List<RoleDTO> getByCompany() {
-        return service.getByCompany();
+        return service.getByAgency();
     }
 }

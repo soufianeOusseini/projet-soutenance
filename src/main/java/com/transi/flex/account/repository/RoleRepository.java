@@ -12,9 +12,9 @@ public interface RoleRepository extends JpaRepository<Role, Long> {
 
 	Optional<Role> findByName(String string);
 
-    List<Role> findByCompanyId(Long currentId);
+    List<Role> findByAgencyId(Long currentId);
 
-    @Query("SELECT r FROM Role r WHERE r.company.id = :companyId OR r.company.id IS NULL")
-    List<Role> findAllByCompanyOrSystem(@Param("companyId") Long companyId);
+    @Query("SELECT r FROM Role r WHERE r.agency.id = :id OR r.agency.id IS NULL")
+    List<Role> findAllByCompanyOrSystem(@Param("id") Long id);
 
 }

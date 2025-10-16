@@ -1,13 +1,18 @@
 package com.transi.flex.agency.model;
 
+import com.transi.flex.bus.model.Bus;
+import com.transi.flex.colis.model.Colis;
 import com.transi.flex.company.model.Company;
 import com.transi.flex.agency.enums.AgencyStatus;
+import com.transi.flex.company.model.CompanyAccount;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Setter
 @Getter
@@ -73,4 +78,13 @@ public class Agency {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    @OneToMany(mappedBy = "agency", cascade = CascadeType.ALL)
+    private Set<Bus> bus = new HashSet<>();
+
+    @OneToMany(mappedBy = "agency", cascade = CascadeType.ALL)
+    private Set<Colis> colis = new HashSet<>();
+
+    @OneToMany(mappedBy = "agency", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Set<CompanyAccount> accounts = new HashSet<>();
 }

@@ -20,31 +20,28 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
 
     List<Ticket> findByUserId(Long userId);
 
-    List<Ticket> findByCompanyId(Long id);
-
+    List<Ticket> findByAgencyId(Long id);
 
     List<Ticket> findByTypeTransaction(String typeTransaction);
 
-    // Requête pour trouver les réservations expirées
     @Query("SELECT t FROM Ticket t WHERE t.typeTransaction = 'RESERVATION' " +
             "AND t.dateLimitePaiement < :now " +
             "AND (t.status = 'RESERVE' OR t.status = 'EN_ATTENTE')")
     List<Ticket> findExpiredReservations(@Param("now") LocalDateTime now);
 
-    // Requête pour statistiques
-    @Query("SELECT COUNT(t) FROM Ticket t WHERE t.status = :status AND t.company.id = :companyId")
-    Long countByStatusAndCompanyId(@Param("status") TicketStatus status, @Param("companyId") Long companyId);
+    @Query("SELECT COUNT(t) FROM Ticket t WHERE t.status = :status AND t.agency.id = :agencyId")
+    Long countByStatusAndAgencyId(@Param("status") TicketStatus status, @Param("agencyId") Long agencyId);
 
-    @Query("SELECT SUM(t.prix) FROM Ticket t WHERE t.status = 'PAYE' AND t.company.id = :companyId")
-    Double getTotalRevenueByCompanyId(@Param("companyId") Long companyId);
+    @Query("SELECT SUM(t.prix) FROM Ticket t WHERE t.status = 'PAYE' AND t.agency.id = :agencyId")
+    Double getTotalRevenueByAgencyId(@Param("agencyId") Long agencyId);
 
     // Tickets d'une date spécifique
     @Query("SELECT t FROM Ticket t WHERE t.date = :date AND t.trajet.id = :trajetId")
     List<Ticket> findByDateAndTrajetId(@Param("date") java.time.LocalDate date, @Param("trajetId") Long trajetId);
 
-    long countByDateGreaterThanEqualAndCompanyId(LocalDate date, Long companyId);
+    long countByDateGreaterThanEqualAndAgencyId(LocalDate date, Long agencyId);
 
-    long countByDateBetweenAndCompanyId(LocalDate startDate, LocalDate endDate, Long companyId);
+    long countByDateBetweenAndAgencyId(LocalDate startDate, LocalDate endDate, Long agencyId);
 
-    long countByCompanyId(Long companyId);
+    long countByAgencyId(Long agencyId);
 }

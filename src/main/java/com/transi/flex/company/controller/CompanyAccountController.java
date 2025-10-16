@@ -25,25 +25,21 @@ public class CompanyAccountController {
 
     @GetMapping("/company/{companyId}")
     public ResponseEntity<List<CompanyAccountDTO>> getAccountsByCompany(@PathVariable Long companyId) {
-        log.info("Récupération des comptes pour la compagnie: {}", companyId);
-        List<CompanyAccountDTO> accounts = accountService.getAccountsByCompanyId(companyId);
+        List<CompanyAccountDTO> accounts = accountService.getAccountsByAgencyId(companyId);
         return ResponseEntity.ok(accounts);
     }
 
     @GetMapping("/{id}")
     public CompanyAccountDTO getAccountById(@PathVariable Long id) {
-        log.info("Récupération du compte: {}", id);
         return accountService.getAccountById(id);
     }
 
     @PostMapping
     public ResponseEntity<CompanyAccountDTO> createAccount(@RequestBody CompanyAccountDTO accountDTO) {
-        log.info("Création d'un nouveau compte: {}", accountDTO.getAccountName());
         try {
             CompanyAccountDTO createdAccount = accountService.createAccount(accountDTO);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdAccount);
         } catch (IllegalArgumentException e) {
-            log.error("Erreur lors de la création du compte: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -51,19 +47,16 @@ public class CompanyAccountController {
     @PutMapping("/{id}")
     public ResponseEntity<CompanyAccountDTO> updateAccount(@PathVariable Long id,
                                                            @RequestBody CompanyAccountDTO accountDTO) {
-        log.info("Mise à jour du compte: {}", id);
         try {
             CompanyAccountDTO updatedAccount = accountService.updateAccount(id, accountDTO);
             return ResponseEntity.ok(updatedAccount);
         } catch (IllegalArgumentException e) {
-            log.error("Erreur lors de la mise à jour du compte: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAccount(@PathVariable Long id) {
-        log.info("Suppression du compte: {}", id);
         try {
             accountService.deleteAccount(id);
             return ResponseEntity.noContent().build();
@@ -76,12 +69,10 @@ public class CompanyAccountController {
     @PatchMapping("/{id}/status")
     public ResponseEntity<CompanyAccountDTO> changeAccountStatus(@PathVariable Long id,
                                                                  @RequestParam AccountStatus status) {
-        log.info("Changement du statut du compte {} vers: {}", id, status);
         try {
             CompanyAccountDTO updatedAccount = accountService.changeAccountStatus(id, status);
             return ResponseEntity.ok(updatedAccount);
         } catch (IllegalArgumentException e) {
-            log.error("Erreur lors du changement de statut: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -89,12 +80,10 @@ public class CompanyAccountController {
     @PatchMapping("/{id}/balance")
     public ResponseEntity<CompanyAccountDTO> updateBalance(@PathVariable Long id,
                                                            @RequestParam BigDecimal newBalance) {
-        log.info("Mise à jour du solde du compte {} vers: {}", id, newBalance);
         try {
             CompanyAccountDTO updatedAccount = accountService.updateBalance(id, newBalance);
             return ResponseEntity.ok(updatedAccount);
         } catch (IllegalArgumentException e) {
-            log.error("Erreur lors de la mise à jour du solde: {}", e.getMessage());
             return ResponseEntity.badRequest().build();
         }
     }
@@ -109,7 +98,7 @@ public class CompanyAccountController {
                     transferRequest.getToAccountId(),
                     transferRequest.getAmount()
             );
-            return ResponseEntity.ok("Transfert effectué avec succès");
+            return ResponseEntity.ok("Transfert effectuÃ© avec succÃ¨s");
         } catch (IllegalArgumentException e) {
             log.error("Erreur lors du transfert: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -118,12 +107,12 @@ public class CompanyAccountController {
 
     @GetMapping("/company/{companyId}/summary")
     public ResponseEntity<AccountSummaryDTO> getAccountSummary(@PathVariable Long companyId) {
-        log.info("Récupération du résumé des comptes pour la compagnie: {}", companyId);
+        log.info("RÃ©cupÃ©ration du rÃ©sumÃ© des comptes pour la compagnie: {}", companyId);
 
         BigDecimal totalBalance = accountService.getTotalBalanceByCompany(companyId);
         BigDecimal totalCreditLimit = accountService.getTotalCreditLimitByCompany(companyId);
         long activeAccounts = accountService.countActiveAccountsByCompany(companyId);
-        List<CompanyAccountDTO> allAccounts = accountService.getAccountsByCompanyId(companyId);
+        List<CompanyAccountDTO> allAccounts = accountService.getAccountsByAgencyId(companyId);
 
         AccountSummaryDTO summary = AccountSummaryDTO.builder()
                 .totalBalance(totalBalance)
@@ -138,7 +127,7 @@ public class CompanyAccountController {
 
     @GetMapping("/company/{companyId}/principal")
     public CompanyAccountDTO getPrincipalAccount(@PathVariable Long companyId) {
-        log.info("Récupération du compte principal pour la compagnie: {}", companyId);
+        log.info("RÃ©cupÃ©ration du compte principal pour la compagnie: {}", companyId);
         return accountService.getPrincipalAccount(companyId);
     }
 

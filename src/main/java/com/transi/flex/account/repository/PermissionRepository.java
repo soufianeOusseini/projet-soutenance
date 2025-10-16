@@ -15,5 +15,5 @@ public interface PermissionRepository extends JpaRepository<Permission, Long> {
 
     List<Permission> findByNameIn(List<String> name);
 
-    List<Permission> findByCompanyId(Sort id, Long companyId);
+    List<Permission> findByAgencyId(Sort id, Long agencyId);
 }

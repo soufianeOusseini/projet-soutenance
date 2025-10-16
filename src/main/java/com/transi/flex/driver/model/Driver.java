@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.transi.flex.account.model.User;
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.company.model.Company;
 import com.transi.flex.driver.enums.DriverStatus;
 
@@ -42,9 +43,9 @@ public class Driver {
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "COMPANY_ID")
+    @JoinColumn(name = "AGENCY_ID")
     @JsonIgnore
-    private Company company;
+    private Agency agency;
 
     public boolean isLicenseValid() {
         return licenseExpiryDate != null && licenseExpiryDate.isAfter(LocalDate.now());

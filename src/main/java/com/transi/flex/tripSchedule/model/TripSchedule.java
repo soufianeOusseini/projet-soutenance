@@ -1,6 +1,7 @@
 package com.transi.flex.tripSchedule.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.bus.model.Bus;
 import com.transi.flex.company.model.Company;
 import com.transi.flex.driver.model.Driver;
@@ -42,9 +43,9 @@ public class TripSchedule {
     private Driver driver;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "COMPANY_ID", nullable = false)
+    @JoinColumn(name = "AGENCY_ID", nullable = false)
     @JsonIgnore
-    private Company company;
+    private Agency agency;
 
     @Column(name = "DATE_DEPART", nullable = false)
     private LocalDate dateDepart;

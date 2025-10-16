@@ -1,6 +1,7 @@
 package com.transi.flex.trajet.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.bus.model.Bus;
 import com.transi.flex.colis.model.Colis;
 import com.transi.flex.company.model.Company;
@@ -69,8 +70,8 @@ public class Trajet {
     private Double amount;
 
     @ManyToOne
-    @JoinColumn(name = "COMPANY_ID")
+    @JoinColumn(name = "AGENCY_ID")
     @JsonIgnore
-    private Company company;
+    private Agency agency;
 
 }

@@ -1,6 +1,7 @@
 package com.transi.flex.bus.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.bus.enums.BusStatus;
 import com.transi.flex.company.model.Company;
 import com.transi.flex.trajet.model.Trajet;
@@ -19,7 +20,7 @@ import java.util.Set;
 @Getter
 @Setter
 @Table(name = "T_BUS",uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"NUMERO", "COMPANY_ID"})
+        @UniqueConstraint(columnNames = {"NUMERO", "AGENCY_ID"})
 })
 public class Bus {
 
@@ -54,9 +55,9 @@ public class Bus {
     private Integer spaceAvailable;
 
     @ManyToOne
-    @JoinColumn(name = "COMPANY_ID", nullable = false)
+    @JoinColumn(name = "AGENCY_ID", nullable = false)
     @JsonIgnore
-    private Company company;
+    private Agency agency;
 
     @OneToMany(mappedBy = "bus")
     @JsonIgnore

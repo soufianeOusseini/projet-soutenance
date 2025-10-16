@@ -25,8 +25,8 @@ public class CompanyAccountDTO {
     private AccountType type;
     private AccountStatus status;
     private String notes;
-    private Long companyId;
-    private String companyName;
+    private Long agencyId;
+    private String agencyName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

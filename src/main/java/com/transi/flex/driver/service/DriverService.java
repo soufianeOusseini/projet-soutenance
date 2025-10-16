@@ -5,8 +5,11 @@ import com.transi.flex.account.enums.UserProfile;
 import com.transi.flex.account.mapper.UserMapper;
 import com.transi.flex.account.model.User;
 import com.transi.flex.account.service.UserService;
+import com.transi.flex.agency.dao.AgencyRepository;
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.company.model.Company;
 import com.transi.flex.company.repository.CompanyRepository;
+import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.config.CompanyContextHolder;
 import com.transi.flex.driver.dao.DriverDAO;
 import com.transi.flex.driver.mapper.DriverMapper;
@@ -28,18 +31,20 @@ public class DriverService {
     private final CompanyRepository companyRepository;
     private final UserService userService;
     private final UserMapper userMapper;
+    private final AgencyRepository agencyRepository;
 
 
     public List<DriverDTO> getAll(){
-        return mapper.toDtos(repository.findByCompanyId(CompanyContextHolder.getCurrentId()));
+        return mapper.toDtos(repository.findByAgencyId(AgencyContextHolder.getCurrentAgencyId()));
     }
 
     public DriverDTO save(DriverDTO dto){
-        Company company = companyRepository.findById(CompanyContextHolder.getCurrentId()).get();
+        Agency agency = agencyRepository.findById(AgencyContextHolder.getCurrentAgencyId())
+                .orElseThrow(() -> new EntityNotFoundException("Agency not found"));
         dto.getUser().addProfile(UserProfile.DRIVER);
         UserDTO user =  userService.add(dto.getUser());
         Driver driver = mapper.toModel(dto);
-        driver.setCompany(company);
+        driver.setAgency(agency);
         driver.setUser(userMapper.toModel(user));
         Driver saved = repository.save(driver);
         return mapper.toDto(saved);

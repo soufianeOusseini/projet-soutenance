@@ -1,5 +1,6 @@
 package com.transi.flex.company.model;
 
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.company.enums.AccountStatus;
 import com.transi.flex.company.enums.AccountType;
 import jakarta.persistence.*;
@@ -53,8 +54,8 @@ public class CompanyAccount {
     private String notes;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "COMPANY_ID", nullable = false)
-    private Company company;
+    @JoinColumn(name = "AGENCY_ID", nullable = false)
+    private Agency agency;
 
     @PrePersist
     protected void onCreate() {

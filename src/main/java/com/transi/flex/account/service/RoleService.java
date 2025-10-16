@@ -3,8 +3,11 @@ package com.transi.flex.account.service;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.transi.flex.agency.mapper.AgencyMapper;
+import com.transi.flex.agency.service.AgencyService;
 import com.transi.flex.company.mapper.CompanyMapper;
 import com.transi.flex.company.service.CompanyService;
+import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.config.CompanyContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -21,13 +24,13 @@ public class RoleService {
 
     private final RoleRepository repository;
     private final RoleMapper mapper;
-    private final CompanyService companyService;
-    private final CompanyMapper companyMapper;
+    private final AgencyService agencyService;
+    private final AgencyMapper agencyMapper;
 
     @Transactional
     public RoleDTO add(RoleDTO dto) {
         Role model = mapper.toModel(dto);
-        model.setCompany(companyMapper.toModel(companyService.getById(CompanyContextHolder.getCurrentId())));
+        model.setAgency(agencyMapper.toModel(agencyService.getById(AgencyContextHolder.getCurrentAgencyId())));
         return mapper.toDto(repository.save(model));
     }
 
@@ -39,9 +42,9 @@ public class RoleService {
         return mapper.toDtos(repository.findAll());
     }
 
-    public List<RoleDTO> getByCompany() {
-        Long currentCompanyId = CompanyContextHolder.getCurrentId();
-        return mapper.toDtos(repository.findAllByCompanyOrSystem(currentCompanyId));
+    public List<RoleDTO> getByAgency() {
+        Long currentAgencyId = AgencyContextHolder.getCurrentAgencyId();
+        return mapper.toDtos(repository.findAllByCompanyOrSystem(currentAgencyId));
     }
 
     @Transactional

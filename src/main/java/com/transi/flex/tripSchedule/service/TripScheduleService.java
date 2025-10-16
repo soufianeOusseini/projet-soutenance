@@ -1,10 +1,11 @@
 package com.transi.flex.tripSchedule.service;
 
+import com.transi.flex.agency.dao.AgencyRepository;
+import com.transi.flex.agency.mapper.AgencyMapper;
+import com.transi.flex.agency.service.AgencyService;
 import com.transi.flex.bus.mapper.BusMapper;
 import com.transi.flex.bus.service.BusService;
-import com.transi.flex.company.mapper.CompanyMapper;
-import com.transi.flex.company.service.CompanyService;
-import com.transi.flex.config.CompanyContextHolder;
+import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.driver.mapper.DriverMapper;
 import com.transi.flex.driver.service.DriverService;
 import com.transi.flex.trajet.mapper.TrajetMapper;
@@ -15,7 +16,6 @@ import com.transi.flex.tripSchedule.dto.TripScheduleDTO;
 import com.transi.flex.tripSchedule.mapper.TripScheduleMapper;
 import com.transi.flex.tripSchedule.model.TripSchedule;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -34,7 +34,7 @@ public class TripScheduleService {
 
     private final DriverService driverService;
 
-    private final CompanyService companyService;
+    private final AgencyService agencyService;
 
     private final TrajetMapper trajetMapper;
 
@@ -42,25 +42,25 @@ public class TripScheduleService {
 
     private final BusMapper busMapper;
 
-    private final CompanyMapper companyMapper;
+    private final AgencyMapper agencyMapper;
 
     private final TripScheduleMapper mapper;
 
+    private final AgencyRepository agencyRepository;
+
 
     public List<ScheduleDTO> getAllSchedules() {
-        return mapper.toDtos(tripScheduleRepository.findByCompanyId(CompanyContextHolder.getCurrentId()));
+        return mapper.toDtos(tripScheduleRepository.findByAgencyId(AgencyContextHolder.getCurrentAgencyId()));
     }
 
     public Optional<TripSchedule> getScheduleById(Long id) {
         return tripScheduleRepository.findById(id);
     }
 
-//    public List<ScheduleDTO> getSchedulesByDateRange(LocalDate startDate, LocalDate endDate) {
-//        return mapper.toDtos(tripScheduleRepository.findByDateRangeAndCompanyId(startDate, endDate, CompanyContextHolder.getCurrentId()));
-//    }
+
 
     public List<TripSchedule> getSchedulesByDate(LocalDate date) {
-        return tripScheduleRepository.findByDateAndCompanyId(date, CompanyContextHolder.getCurrentId());
+        return tripScheduleRepository.findByDateAndAgencyId(date, AgencyContextHolder.getCurrentAgencyId());
     }
 
     public TripSchedule createSchedule(TripScheduleDTO scheduleDTO) throws Exception {
@@ -77,7 +77,7 @@ public class TripScheduleService {
         schedule.setTrajet(trajetMapper.toModel(trajetService.getTrajetById(scheduleDTO.getTrajetId())));
         schedule.setBus(busMapper.toModel(busService.getBusById(scheduleDTO.getBusId())));
         schedule.setDriver(driverMapper.toModel(driverService.getDriver(scheduleDTO.getDriverId())));
-        schedule.setCompany(companyMapper.toModel(companyService.getById(CompanyContextHolder.getCurrentId())));
+        schedule.setAgency(agencyMapper.toModel(agencyService.getById(AgencyContextHolder.getCurrentAgencyId())));
         schedule.setDateDepart(scheduleDTO.getDateDepart());
         schedule.setHeureDepart(scheduleDTO.getHeureDepart());
         schedule.setNombrePlacesDisponibles(busMapper.toModel(busService.getBusById(scheduleDTO.getBusId())).getCapacity());
@@ -133,8 +133,8 @@ public class TripScheduleService {
 
     // Modifier la méthode existante pour ne récupérer que les planifications avec places disponibles
     public List<ScheduleDTO> getSchedulesByDateRange(LocalDate startDate, LocalDate endDate) {
-        return mapper.toDtos(tripScheduleRepository.findAvailableSchedulesByDateRangeAndCompanyId(
-                startDate, endDate, CompanyContextHolder.getCurrentId()));
+        return mapper.toDtos(tripScheduleRepository.findAvailableSchedulesByDateRangeAndAgencyId(
+                startDate, endDate, AgencyContextHolder.getCurrentAgencyId()));
     }
 
     // Nouvelle méthode pour récupérer une planification spécifique

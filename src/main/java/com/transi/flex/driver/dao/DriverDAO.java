@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface DriverDAO extends JpaRepository<Driver, Long> {
-    List<Driver> findByCompanyId(Long currentId);
+    List<Driver> findByAgencyId(Long currentId);
 }

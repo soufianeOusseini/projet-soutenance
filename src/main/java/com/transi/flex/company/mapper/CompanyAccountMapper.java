@@ -1,7 +1,8 @@
-package com.transi.flex.company.model;
+package com.transi.flex.company.mapper;
 
 
 import com.transi.flex.company.dto.CompanyAccountDTO;
+import com.transi.flex.company.model.CompanyAccount;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;

@@ -37,9 +37,7 @@ public class ColisController {
         return service.getColisById(id);
     }
 
-    /**
-     * Endpoint pour mettre à jour le statut d'un colis
-     */
+
     @PatchMapping("/{id}/status")
     public ResponseEntity<ColisDTO> updateStatus(
             @PathVariable Long id,

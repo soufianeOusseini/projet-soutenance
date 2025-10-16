@@ -15,25 +15,19 @@ import java.util.Optional;
 @Repository
 public interface CompanyAccountRepository extends JpaRepository<CompanyAccount, Long> {
 
-    List<CompanyAccount> findByCompanyId(Long companyId);
+    List<CompanyAccount> findByAgencyId(Long id);
 
-    List<CompanyAccount> findByCompanyIdAndStatus(Long companyId, AccountStatus status);
+    @Query("SELECT SUM(ca.balance) FROM CompanyAccount ca WHERE ca.agency.id = :agencyId AND ca.status = 'ACTIVE'")
+    BigDecimal getTotalBalanceByCompanyId(@Param("agencyId") Long agencyId);
 
-    List<CompanyAccount> findByCompanyIdAndType(Long companyId, AccountType type);
+    @Query("SELECT SUM(ca.creditLimit) FROM CompanyAccount ca WHERE ca.agency.id = :agencyId AND ca.status = 'ACTIVE'")
+    BigDecimal getTotalCreditLimitByCompanyId(@Param("agencyId") Long agencyId);
 
-    Optional<CompanyAccount> findByAccountNumber(String accountNumber);
+    @Query("SELECT COUNT(ca) FROM CompanyAccount ca WHERE ca.agency.id = :agencyId AND ca.status = :status")
+    long countByAgencyIdAndStatus(@Param("agencyId") Long agencyId, @Param("status") AccountStatus status);
 
-    @Query("SELECT SUM(ca.balance) FROM CompanyAccount ca WHERE ca.company.id = :companyId AND ca.status = 'ACTIVE'")
-    BigDecimal getTotalBalanceByCompanyId(@Param("companyId") Long companyId);
-
-    @Query("SELECT SUM(ca.creditLimit) FROM CompanyAccount ca WHERE ca.company.id = :companyId AND ca.status = 'ACTIVE'")
-    BigDecimal getTotalCreditLimitByCompanyId(@Param("companyId") Long companyId);
-
-    @Query("SELECT COUNT(ca) FROM CompanyAccount ca WHERE ca.company.id = :companyId AND ca.status = :status")
-    long countByCompanyIdAndStatus(@Param("companyId") Long companyId, @Param("status") AccountStatus status);
-
-    @Query("SELECT ca FROM CompanyAccount ca WHERE ca.company.id = :companyId AND ca.type = 'PRINCIPAL' AND ca.status = 'ACTIVE'")
-    Optional<CompanyAccount> findPrincipalAccountByCompanyId(@Param("companyId") Long companyId);
+    @Query("SELECT ca FROM CompanyAccount ca WHERE ca.agency.id = :agencyId AND ca.type = 'PRINCIPAL' AND ca.status = 'ACTIVE'")
+    Optional<CompanyAccount> findPrincipalAccountByAgencyId(@Param("agencyId") Long agencyId);
 
     boolean existsByAccountNumber(String accountNumber);
 }

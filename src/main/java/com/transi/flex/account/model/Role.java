@@ -1,9 +1,9 @@
-// Classe Role
 package com.transi.flex.account.model;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.company.model.Company;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -35,8 +35,8 @@ public class Role {
 	private String name;
 
 	@ManyToOne
-	@JoinColumn(name = "COMPANY_ID", updatable = false)
-	private Company company;
+	@JoinColumn(name = "AGENCY_ID", updatable = false)
+	private Agency agency;
 
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(name = "ROLE_PERMISSION", joinColumns = { @JoinColumn(name = "ROLE_ID") }, inverseJoinColumns = {

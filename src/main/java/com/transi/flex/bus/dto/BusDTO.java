@@ -27,5 +27,5 @@ public class BusDTO {
 
     private Integer spaceAvailable;
 
-    private Long companyId;
+    private Long agencyId;
 }

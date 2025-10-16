@@ -6,10 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface BusRepository extends JpaRepository<Bus,Long> {
-    List<Bus> findByCompanyId(Long id);
+    List<Bus> findByAgencyId(Long id);
 
-    boolean existsByNumberAndCompanyId(String numero, Long companyId);
+    boolean existsByNumberAndAgencyId(String numero, Long agencyId);
 
-    boolean existsByNumberAndCompanyIdAndIdNot(String number, Long companyId, Long id);
+    boolean existsByNumberAndAgencyIdAndIdNot(String number, Long agencyId, Long id);
 
 }

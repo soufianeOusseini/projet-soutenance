@@ -1,5 +1,6 @@
 package com.transi.flex.ticket.dto;
 
+import com.transi.flex.account.dto.UserDTO;
 import com.transi.flex.reservation.enums.ModePaiement;
 import com.transi.flex.ticket.enums.TicketStatus;
 import com.transi.flex.trajet.dto.TrajetDTO;
@@ -33,18 +34,18 @@ public class TicketDTO {
 
     private Long reservationId;
 
-    // Informations client
     private String clientNom;
     private String clientPrenom;
     private String clientContact;
 
-    // Type de transaction
-    private String typeTransaction; // "ACHAT" ou "RESERVATION"
+    private String typeTransaction;
     private LocalDateTime dateLimitePaiement;
 
     // Informations supplémentaires pour l'affichage
     private String trajetInfo; // Ex: "Lomé → Kara"
     private String companyName;
+    private Long agencyId;
+    private UserDTO user;
 
     // Méthode utilitaire
     public boolean isReservationExpired() {

@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface TrajetRepository extends JpaRepository<Trajet, Long> {
-    List<Trajet> findByCompanyId(Long is);
+    List<Trajet> findByAgencyId(Long id);
 
-    long countByCompanyId(Long companyId);
+    long countByAgencyId(Long id);
 }

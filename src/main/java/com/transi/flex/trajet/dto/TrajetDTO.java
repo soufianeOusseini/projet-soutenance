@@ -38,7 +38,7 @@ public class TrajetDTO {
 
     private Set<Colis> colis = new HashSet<>();
 
-    private Long companyId;
+    private Long agencyId;
 
     private Double amount;
 }

@@ -2,6 +2,7 @@ package com.transi.flex.ticket.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.transi.flex.account.model.User;
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.company.model.Company;
 import com.transi.flex.reservation.enums.ModePaiement;
 import com.transi.flex.reservation.model.Reservation;
@@ -61,9 +62,10 @@ public class Ticket {
     private Reservation reservation;
 
     @ManyToOne
-    @JoinColumn(name = "COMPANY_ID")
+    @JoinColumn(name = "AGENCY_ID")
     @JsonIgnore
-    private Company company;
+    private Agency agency;
+
 
     @Column(name = "CLIENT_NOM", nullable = false)
     private String clientNom;

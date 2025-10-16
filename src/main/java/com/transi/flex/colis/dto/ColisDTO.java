@@ -31,7 +31,7 @@ public class ColisDTO {
 
     private String lieuReception;
 
-    private Long companyId;
+    private Long agencyId;
 
     private Long trajetId;
 

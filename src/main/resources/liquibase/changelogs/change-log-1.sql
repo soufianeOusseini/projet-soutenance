@@ -15,10 +15,31 @@ CREATE TABLE IF NOT EXISTS t_company (
     CONSTRAINT t_company_pkey PRIMARY KEY (id)
     );
 
+--changeset sousseini:create_table_t_agency
+CREATE TABLE IF NOT EXISTS T_AGENCY (
+                                        ID BIGSERIAL PRIMARY KEY,
+                                        NAME VARCHAR(255) NOT NULL,
+    CODE VARCHAR(255) UNIQUE,
+    ADDRESS TEXT,
+    PHONE VARCHAR(50),
+    CITY VARCHAR(100),
+    REGION VARCHAR(100),
+    EMAIL VARCHAR(255),
+    MANAGER_NAME VARCHAR(255),
+    MANAGER_PHONE VARCHAR(50),
+    STATUS VARCHAR(50) DEFAULT 'ACTIVE',
+    CREATED_AT TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UPDATED_AT TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    COMPANY_ID BIGINT NOT NULL,
+
+    CONSTRAINT fk_agency_company FOREIGN KEY (COMPANY_ID)
+    REFERENCES t_agency(ID)
+    );
+
 -- Table Profile
 CREATE TABLE IF NOT EXISTS t_profile (
-                                         id bigserial NOT NULL,
-                                         name varchar(255) NULL,
+     id bigserial NOT NULL,
+     name varchar(255) NULL,
     CONSTRAINT t_profile_name_key UNIQUE (name),
     CONSTRAINT t_profile_pkey PRIMARY KEY (id)
     );
@@ -27,20 +48,20 @@ CREATE TABLE IF NOT EXISTS t_profile (
 CREATE TABLE IF NOT EXISTS t_permission (
     id bigserial NOT NULL,
     name varchar(255) NULL,
-    company_id int8 NULL,
+    agency_id int8 NULL,
     CONSTRAINT t_permission_name_key UNIQUE (name),
     CONSTRAINT t_permission_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_permission_company FOREIGN KEY (company_id) REFERENCES t_company(id)
+    CONSTRAINT fk_permission_company FOREIGN KEY (agency_id) REFERENCES t_agency(id)
     );
 
 -- Table Role
 CREATE TABLE IF NOT EXISTS t_role (
     id bigserial NOT NULL,
     name varchar(255) NULL,
-    company_id int8 NULL,
+    agency_id int8 NULL,
     CONSTRAINT t_role_name_key UNIQUE (name),
     CONSTRAINT t_role_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_role_company FOREIGN KEY (company_id) REFERENCES t_company(id)
+    CONSTRAINT fk_role_company FOREIGN KEY (agency_id) REFERENCES t_agency(id)
     );
 
 -- Table User
@@ -62,7 +83,7 @@ CREATE TABLE IF NOT EXISTS t_user (
     CONSTRAINT t_user_phone_key UNIQUE (phone),
     CONSTRAINT t_user_username_key UNIQUE (username),
     CONSTRAINT t_user_pkey PRIMARY KEY (id),
-    CONSTRAINT fk_user_company FOREIGN KEY (company_id) REFERENCES t_company(id)
+    CONSTRAINT fk_user_company FOREIGN KEY (company_id) REFERENCES t_agency(id)
     );
 
 -- Table RefreshToken
@@ -127,10 +148,10 @@ CREATE TABLE IF NOT EXISTS t_bus (
     type VARCHAR(100),
     status VARCHAR(50),
     space_available INT,
-    company_id BIGINT NOT NULL,
+    agency_id BIGINT NOT NULL,
     CONSTRAINT t_bus_pkey PRIMARY KEY (id),
-    CONSTRAINT uk_bus_numero_company UNIQUE (numero, company_id),
-    FOREIGN KEY (company_id) REFERENCES t_company(id)
+    CONSTRAINT uk_bus_numero_company UNIQUE (numero, agency_id),
+    FOREIGN KEY (agency_id) REFERENCES t_agency(id)
     );
 
 
@@ -191,10 +212,10 @@ CREATE TABLE IF NOT EXISTS t_colis (
    prix float8,
    lieu_envoi VARCHAR(255),
    lieu_reception VARCHAR(255),
-    company_id BIGINT,
+    agency_id BIGINT,
    trajet BIGINT,
    status VARCHAR(50),
-   FOREIGN KEY (company_id) REFERENCES T_COMPANY(id),
+   FOREIGN KEY (agency_id) REFERENCES t_agency(id),
    FOREIGN KEY (trajet) REFERENCES t_trajet(id),
     CONSTRAINT t_colis_pkey PRIMARY KEY (id)
 );
@@ -242,8 +263,8 @@ CREATE INDEX T_APP_FILE_ENTITY_AND_TYPE ON T_APP_FILE USING btree (entity_id, ty
 ALTER TABLE t_user ADD COLUMN IF NOT EXISTS PROFILE_PATH varchar(255);
 
 --changeset sousseini:add_column_company_to_trajet
-ALTER TABLE t_trajet ADD COLUMN IF NOT EXISTS company_id BIGINT;
-ALTER TABLE t_trajet ADD CONSTRAINT fk_trajet_company FOREIGN KEY (company_id) REFERENCES T_COMPANY(id);
+ALTER TABLE t_trajet ADD COLUMN IF NOT EXISTS agency_id BIGINT;
+ALTER TABLE t_trajet ADD CONSTRAINT fk_trajet_company FOREIGN KEY (agency_id) REFERENCES t_agency(id);
 
 
 --changeset sousseini:add_column_amount_to_t_trajet
@@ -271,8 +292,8 @@ ALTER TABLE T_USER ADD COLUMN IF NOT EXISTS BIRTH_PLACE varchar(200) null;
 
 
 --changeset sousseini:add_column_company_to_driver
-ALTER TABLE t_driver ADD COLUMN IF NOT EXISTS company_id BIGINT;
-ALTER TABLE t_driver ADD CONSTRAINT fk_driver_company FOREIGN KEY (company_id) REFERENCES T_COMPANY(id);
+ALTER TABLE t_driver ADD COLUMN IF NOT EXISTS agency_id BIGINT;
+ALTER TABLE t_driver ADD CONSTRAINT fk_driver_company FOREIGN KEY (agency_id) REFERENCES t_agency(id);
 
 
 --changeset sousseini:create_table_trip_schedule
@@ -281,7 +302,7 @@ CREATE TABLE IF NOT EXISTS t_trip_schedule (
    trajet_id BIGINT NOT NULL,
    bus_id BIGINT NOT NULL,
    driver_id BIGINT NOT NULL,
-   company_id BIGINT NOT NULL,
+   agency_id BIGINT NOT NULL,
    date_depart DATE NOT NULL,
    heure_depart TIME NOT NULL,
    nombre_places_totales INT NOT NULL,
@@ -295,7 +316,7 @@ CREATE TABLE IF NOT EXISTS t_trip_schedule (
    CONSTRAINT fk_trip_schedule_trajet FOREIGN KEY (trajet_id) REFERENCES t_trajet(id),
    CONSTRAINT fk_trip_schedule_bus FOREIGN KEY (bus_id) REFERENCES t_bus(id),
    CONSTRAINT fk_trip_schedule_driver FOREIGN KEY (driver_id) REFERENCES t_driver(id),
-   CONSTRAINT fk_trip_schedule_company FOREIGN KEY (company_id) REFERENCES t_company(id),
+   CONSTRAINT fk_trip_schedule_company FOREIGN KEY (agency_id) REFERENCES t_agency(id),
 
    CONSTRAINT chk_places_totales CHECK (nombre_places_totales > 0),
    CONSTRAINT chk_places_disponibles CHECK (nombre_places_disponibles >= 0),
@@ -306,8 +327,8 @@ CREATE TABLE IF NOT EXISTS t_trip_schedule (
 
 
 --changeset sousseini:add_column_company_to_ticket
-ALTER TABLE t_ticket ADD COLUMN IF NOT EXISTS company_id BIGINT;
-ALTER TABLE t_ticket ADD CONSTRAINT fk_ticket_company FOREIGN KEY (company_id) REFERENCES T_COMPANY(id);
+ALTER TABLE t_ticket ADD COLUMN IF NOT EXISTS agency_id BIGINT;
+ALTER TABLE t_ticket ADD CONSTRAINT fk_ticket_company FOREIGN KEY (agency_id) REFERENCES t_agency(id);
 
 
 --changeset sousseini:drop_constraint
@@ -338,28 +359,6 @@ CREATE INDEX idx_ticket_date_limite ON T_TICKET(DATE_LIMITE_PAIEMENT);
 CREATE INDEX idx_ticket_client_contact ON T_TICKET(CLIENT_CONTACT);
 CREATE INDEX idx_ticket_status_type ON T_TICKET(STATUS, TYPE_TRANSACTION);
 
---changeset sousseini:create_table_t_agency
-CREATE TABLE IF NOT EXISTS T_AGENCY (
-    ID BIGSERIAL PRIMARY KEY,
-    NAME VARCHAR(255) NOT NULL,
-    CODE VARCHAR(255) UNIQUE,
-    ADDRESS TEXT,
-    PHONE VARCHAR(50),
-    CITY VARCHAR(100),
-    REGION VARCHAR(100),
-    EMAIL VARCHAR(255),
-    MANAGER_NAME VARCHAR(255),
-    MANAGER_PHONE VARCHAR(50),
-    STATUS VARCHAR(50) DEFAULT 'ACTIVE',
-    CREATED_AT TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UPDATED_AT TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    COMPANY_ID BIGINT NOT NULL,
-
-    CONSTRAINT fk_agency_company FOREIGN KEY (COMPANY_ID)
-    REFERENCES T_COMPANY(ID)
-    );
-
-
 --changeset sousseini:create_table_t_company_account
 CREATE TABLE IF NOT EXISTS T_COMPANY_ACCOUNT (
      ID BIGSERIAL PRIMARY KEY,
@@ -372,10 +371,10 @@ CREATE TABLE IF NOT EXISTS T_COMPANY_ACCOUNT (
     CREATED_AT TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UPDATED_AT TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     NOTES TEXT,
-    COMPANY_ID BIGINT NOT NULL,
+    agency_id BIGINT NOT NULL,
 
-    CONSTRAINT fk_company_account_company FOREIGN KEY (COMPANY_ID)
-    REFERENCES T_COMPANY(ID)
+    CONSTRAINT fk_company_account_company FOREIGN KEY (agency_id)
+    REFERENCES t_agency(ID)
     );
 
 --changeset a.rachad:add_trips_permissions
@@ -405,3 +404,9 @@ ALTER TABLE t_bus DROP CONSTRAINT IF EXISTS t_bus_numero_key;
 --changeset a.rachad:add_agency_id_to_user
 ALTER TABLE T_USER ADD COLUMN IF NOT EXISTS AGENCY_ID BIGINT;
 ALTER TABLE T_USER ADD CONSTRAINT fk_user_agency FOREIGN KEY (AGENCY_ID) REFERENCES T_AGENCY(ID);
+
+
+--changeset sousseini:add_user_to_colis
+ALTER TABLE T_COLIS ADD COLUMN IF NOT EXISTS USER_ID BIGINT;
+ALTER TABLE T_COLIS ADD CONSTRAINT fk_user_colis FOREIGN KEY (USER_ID) REFERENCES T_COLIS(ID);
+
