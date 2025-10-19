@@ -23,6 +23,11 @@ public class AgencyController {
 
     private final AgencyService agencyService;
 
+    @GetMapping("/company/{id}")
+    public ResponseEntity<List<AgencyDTO>> getAgenciesByCompanyId(@PathVariable(name = "id") Long id) {
+        List<AgencyDTO> agencies = agencyService.getAgenciesByCompanyId(id);
+        return ResponseEntity.ok(agencies);
+    }
     @GetMapping("/company")
     public ResponseEntity<List<AgencyDTO>> getAgenciesByCompany() {
         List<AgencyDTO> agencies = agencyService.getAgenciesByCompanyId(CompanyContextHolder.getCurrentId());

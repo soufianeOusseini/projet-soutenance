@@ -5,6 +5,9 @@ import com.transi.flex.agency.mapper.AgencyMapper;
 import com.transi.flex.agency.service.AgencyService;
 import com.transi.flex.bus.mapper.BusMapper;
 import com.transi.flex.bus.service.BusService;
+import com.transi.flex.company.dto.CompanyDTO;
+import com.transi.flex.company.model.Company;
+import com.transi.flex.company.service.CompanyService;
 import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.driver.mapper.DriverMapper;
 import com.transi.flex.driver.service.DriverService;
@@ -12,7 +15,9 @@ import com.transi.flex.trajet.mapper.TrajetMapper;
 import com.transi.flex.trajet.service.TrajetService;
 import com.transi.flex.tripSchedule.dao.TripScheduleDAO;
 import com.transi.flex.tripSchedule.dto.ScheduleDTO;
+import com.transi.flex.tripSchedule.dto.SearchTripRequestDTO;
 import com.transi.flex.tripSchedule.dto.TripScheduleDTO;
+import com.transi.flex.tripSchedule.dto.TripSearchResultDTO;
 import com.transi.flex.tripSchedule.mapper.TripScheduleMapper;
 import com.transi.flex.tripSchedule.model.TripSchedule;
 import lombok.RequiredArgsConstructor;
@@ -47,6 +52,8 @@ public class TripScheduleService {
     private final TripScheduleMapper mapper;
 
     private final AgencyRepository agencyRepository;
+
+    private final CompanyService companyService;
 
 
     public List<ScheduleDTO> getAllSchedules() {
@@ -141,4 +148,56 @@ public class TripScheduleService {
     public Optional<TripSchedule> getScheduleByTrajetAndDate(Long trajetId, LocalDate date) {
         return tripScheduleRepository.findByTrajetIdAndDate(trajetId, date);
     }
+
+//    public List<ScheduleDTO> searchTrips(SearchTripRequestDTO request) {
+//        return mapper.toDtos(
+//                tripScheduleRepository.findAvailableTrips(
+//                        request.getVilleDepart(),
+//                        request.getVilleArrive(),
+//                        request.getDateDepart(),
+//                        request.getHeureDepart(),
+//                        request.getNombrePassagers(),
+//                        AgencyContextHolder.getCurrentAgencyId()
+//                )
+//        );
+//    }
+
+    public List<TripSearchResultDTO> searchTrips(SearchTripRequestDTO request) throws Exception {
+        if (request.getVilleDepart() == null || request.getVilleDepart().isEmpty()) {
+            throw new Exception("Ville de départ requise");
+        }
+        if (request.getVilleArrive() == null || request.getVilleArrive().isEmpty()) {
+            throw new Exception("Ville d'arrivée requise");
+        }
+        if (request.getDateDepart() == null) {
+            throw new Exception("Date de départ requise");
+        }
+        if (request.getHeureDepart() == null) {
+            throw new Exception("Heure de départ requise");
+        }
+        if (request.getNombrePassagers() == null || request.getNombrePassagers() <= 0) {
+            throw new Exception("Nombre de passagers invalide");
+        }
+
+        List<TripSchedule> trips = tripScheduleRepository.findAvailableTrips(
+                request.getVilleDepart(),
+                request.getVilleArrive(),
+                request.getDateDepart(),
+                request.getHeureDepart(),
+                request.getNombrePassagers()
+        );
+
+        return mapper.toTripSearchDtos(trips);
+    }
+
+    public List<String> getDepartureCities() {
+        return tripScheduleRepository.findAllDepartureCities();
+    }
+
+    public List<String> getArrivalCities(String villeDepart) {
+        return tripScheduleRepository.findArrivalCitiesByDeparture(
+                villeDepart
+        );
+    }
+
 }

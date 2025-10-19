@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,4 +69,15 @@ public class Colis {
     @ManyToOne
     @JoinColumn(name = "USER_ID")
     private User user;
+
+    @Column(name = "CREATED_AT")
+    private LocalDateTime createdAt;
+
+    @Column(name = "UPDATED_AT")
+    private LocalDateTime updatedAt;
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
 }

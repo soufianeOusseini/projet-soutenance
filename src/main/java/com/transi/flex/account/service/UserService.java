@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import com.transi.flex.account.dto.RegisterRequest;
 import com.transi.flex.agency.dao.AgencyRepository;
 import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.file.enums.FileType;
@@ -167,8 +168,8 @@ public class UserService {
 		User user = repository.findById(dto.getId()).orElseThrow();
 		User userUpdated = mapper.toModel(dto);
 		if (StringUtils.isNotBlank(userUpdated.getEmail())) {
-			user.setEmail(userUpdated.getEmail().trim());
-			user.setUsername(userUpdated.getEmail().trim());
+			user.setEmail(userUpdated.getEmail());
+			user.setUsername(userUpdated.getEmail());
 		}
 		user.setFirstName(userUpdated.getFirstName());
 		user.setLastName(userUpdated.getLastName());
@@ -212,4 +213,27 @@ public class UserService {
 		user.setProfilePath(profilePath);
 		repository.save(user);
 	}
+
+	public UserDTO getUserById(Long id){
+		return mapper.toDto(repository.findById(id).orElse(null));
+	}
+
+	public UserDTO register(RegisterRequest registerRequest) {
+		User user = new User();
+		user.setEmail(registerRequest.getEmail());
+		user.setUsername(registerRequest.getEmail());
+		user.setFirstName(registerRequest.getFirstName());
+		user.setLastName(registerRequest.getLastName());
+		user.setPhone(registerRequest.getPhoneNumber());
+		user.addProfile(UserProfile.USER);
+
+		String password = generatePassword();
+		user.setPassword(passwordEncoder.encode(password));
+		user.setPasswordReseted(false);
+
+		User saved = repository.save(user);
+			sendUserCreationEmail(saved, password);
+		return mapper.toDto(repository.save(user));
+	}
+
 }

@@ -44,6 +44,7 @@ public class SecurityConfig {
 								"/authentication/verify-reset-password-code/**", "/tmp-updaload", "/actuator/monitoring/**",
 								"/company/public/logo/**",
 								"/authentication/user/**",
+								"/authentication/register/**",
 								"/upload/**")
 						.permitAll().anyRequest().authenticated());
 

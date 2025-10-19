@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,4 +45,39 @@ public interface TripScheduleDAO extends JpaRepository<TripSchedule, Long> {
     List<TripSchedule> findAvailableSchedulesByDateRangeAndAgencyId(@Param("startDate") LocalDate startDate,
                                                                      @Param("endDate") LocalDate endDate,
                                                                      @Param("agencyId") Long agencyId);
+
+    @Query("""
+    SELECT ts FROM TripSchedule ts
+     JOIN FETCH ts.agency a
+        JOIN FETCH a.company c
+    WHERE ts.trajet.villeDepart = :villeDepart
+    AND ts.trajet.villeArrive = :villeArrive
+    AND ts.dateDepart = :dateDepart
+    AND ts.heureDepart >= :heureDepart
+    AND ts.nombrePlacesDisponibles >= :nombrePassagers
+    ORDER BY ts.heureDepart
+""")
+    List<TripSchedule> findAvailableTrips(
+            @Param("villeDepart") String villeDepart,
+            @Param("villeArrive") String villeArrive,
+            @Param("dateDepart") LocalDate dateDepart,
+            @Param("heureDepart") LocalTime heureDepart,
+            @Param("nombrePassagers") Integer nombrePassagers
+    );
+
+    @Query("""
+        SELECT DISTINCT t.villeDepart FROM Trajet t
+        ORDER BY t.villeDepart ASC
+    """)
+    List<String> findAllDepartureCities();
+
+    @Query("""
+        SELECT DISTINCT t.villeArrive FROM Trajet t
+        WHERE t.villeDepart = :villeDepart
+        ORDER BY t.villeArrive ASC
+    """)
+    List<String> findArrivalCitiesByDeparture(
+            @Param("villeDepart") String villeDepart
+    );
+
 }

@@ -123,4 +123,9 @@ public class AuthenticationController {
     public UserDTO getCurrentUser(){
         return userService.getCurrentUser();
     }
+
+    @PostMapping("/register")
+    public UserDTO register(@RequestBody RegisterRequest registerRequest){
+        return userService.register(registerRequest);
+    }
 }

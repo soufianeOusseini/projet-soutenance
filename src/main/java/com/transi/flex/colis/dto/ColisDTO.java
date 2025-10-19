@@ -1,5 +1,7 @@
 package com.transi.flex.colis.dto;
 
+import com.transi.flex.account.dto.UserDTO;
+import com.transi.flex.agency.dto.AgencyDTO;
 import com.transi.flex.colis.enums.ColisStatus;
 import com.transi.flex.colis.model.ColisItems;
 import com.transi.flex.company.model.Company;
@@ -8,6 +10,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,4 +41,11 @@ public class ColisDTO {
     private ColisStatus status;
 
     private List<ColisItems> colisItems = new ArrayList<>();
+
+    private UserDTO user;
+
+    private AgencyDTO agency;
+
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

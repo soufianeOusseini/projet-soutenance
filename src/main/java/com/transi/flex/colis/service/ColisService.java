@@ -1,5 +1,7 @@
 package com.transi.flex.colis.service;
 
+import com.transi.flex.account.dto.UserDTO;
+import com.transi.flex.account.service.UserService;
 import com.transi.flex.agency.model.Agency;
 import com.transi.flex.colis.dto.ColisDTO;
 import com.transi.flex.colis.enums.ColisStatus;
@@ -15,6 +17,8 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 import com.transi.flex.agency.dao.AgencyRepository;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -25,16 +29,34 @@ public class ColisService {
     private final ColisMapper mapper;
     private final CompanyRepository companyRepository;
     private final AgencyRepository agencyRepository;
+    private final UserService userService;
 
     public List<ColisDTO> getAll(){
         return mapper.toDtos(repository.findByAgencyId(AgencyContextHolder.getCurrentAgencyId()));
     }
 
     public ColisDTO save(ColisDTO dto){
+        if(dto.getUser() !=null){
+            UserDTO user = userService.getUserById(dto.getUser().getId());
+            dto.setExpediteur(user.getFirstName());
+            dto.setUser(user);
+        }
+        if(dto.getNumero() == null){
+            dto.setNumero(generateUniqueNumber());
+        }
+
         Colis colis = mapper.toModel(dto);
-        Agency agency = agencyRepository.findById(AgencyContextHolder.getCurrentAgencyId())
-                .orElseThrow(() -> new EntityNotFoundException("Agency not found"));
-        colis.setAgency(agency);
+        if(AgencyContextHolder.getCurrentAgencyId() !=null){
+            Agency agency = agencyRepository.findById(AgencyContextHolder.getCurrentAgencyId())
+                    .orElseThrow(() -> new EntityNotFoundException("Agency not found"));
+            colis.setAgency(agency);
+        }
+//        if(dto.getAgency() !=null){
+//            Agency agency = agencyRepository.findById(dto.getAgency().getId())
+//                    .orElseThrow(() -> new EntityNotFoundException("Agency not found"));
+//            colis.setAgency(agency);
+//        }
+
         colis.setStatus(ColisStatus.EN_ATTENTE);
         if (CollectionUtils.isNotEmpty(colis.getColisItems())) {
             colis.getColisItems().forEach(items -> {
@@ -44,7 +66,21 @@ public class ColisService {
 
         return mapper.toDto(repository.save(colis));
     }
+    public String generateUniqueNumber() {
+        Date date = new Date();
+        SimpleDateFormat yearFormat = new SimpleDateFormat("yyyy");
+        SimpleDateFormat monthFormat = new SimpleDateFormat("MM");
+        SimpleDateFormat dayFormat = new SimpleDateFormat("dd");
 
+        String year = yearFormat.format(date);
+        String month = monthFormat.format(date);
+        String day = dayFormat.format(date);
+
+        int randomNumber = (int) (Math.random() * 10000);
+        String randomPart = String.format("%04d", randomNumber);
+
+        return "COL-" + year + month + day + "-" + randomPart;
+    }
     public ColisDTO getColisById(Long id){
         Colis colis = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Colis not found"));
@@ -134,5 +170,9 @@ public class ColisService {
 
     public List<ColisDTO> getByUser(Long id){
         return mapper.toDtos(repository.findByUserId(id));
+    }
+
+    public List<ColisDTO> getUserColis(){
+        return mapper.toDtos(repository.findByUserId(userService.getCurrentUser().getId()));
     }
 }

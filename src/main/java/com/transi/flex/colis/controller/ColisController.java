@@ -59,4 +59,9 @@ public class ColisController {
         List<ColisStatus> availableStatuses = service.getAvailableStatusTransitions(id);
         return ResponseEntity.ok(availableStatuses);
     }
+
+    @GetMapping("user-colis")
+    public List<ColisDTO> getUserColis(){
+        return service.getUserColis();
+    }
 }

@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.transi.flex.account.dto.RegisterRequest;
 import com.transi.flex.company.dto.CompanyDTO;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

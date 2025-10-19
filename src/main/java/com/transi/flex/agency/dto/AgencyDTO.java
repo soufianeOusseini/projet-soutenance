@@ -1,6 +1,7 @@
 package com.transi.flex.agency.dto;
 
 import com.transi.flex.agency.enums.AgencyStatus;
+import com.transi.flex.company.dto.CompanyDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -29,4 +30,5 @@ public class AgencyDTO {
     private String companyName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private CompanyDTO company;
 }

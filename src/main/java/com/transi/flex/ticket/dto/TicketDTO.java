@@ -30,6 +30,8 @@ public class TicketDTO {
 
     private Long trajetId;
 
+    private TrajetDTO trajet;
+
     private ModePaiement modePaiement;
 
     private Long reservationId;
@@ -41,13 +43,11 @@ public class TicketDTO {
     private String typeTransaction;
     private LocalDateTime dateLimitePaiement;
 
-    // Informations supplémentaires pour l'affichage
     private String trajetInfo; // Ex: "Lomé → Kara"
     private String companyName;
     private Long agencyId;
     private UserDTO user;
 
-    // Méthode utilitaire
     public boolean isReservationExpired() {
         return "RESERVATION".equals(typeTransaction)
                 && dateLimitePaiement != null

@@ -1,6 +1,7 @@
 package com.transi.flex.ticket.controller;
 
 import com.transi.flex.ticket.dto.TicketDTO;
+import com.transi.flex.ticket.enums.TicketStatus;
 import com.transi.flex.ticket.service.TicketService;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -42,27 +43,27 @@ public class TicketController {
 
     // Endpoint à ajouter dans TicketController
 
-    @PutMapping("/{id}/cancel")
-    public ResponseEntity
-            <TicketDTO> cancelTicket(@PathVariable Long id) {
-        try {
-            TicketDTO cancelledTicket = service.cancelTicket(id);
-            return ResponseEntity.ok(cancelledTicket);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (IllegalStateException e) {
-            return ResponseEntity.badRequest().build();
-        }
-    }
+//    @PutMapping("/{id}/cancel")
+//    public ResponseEntity
+//            <TicketDTO> cancelTicket(@PathVariable Long id) {
+//        try {
+//            TicketDTO cancelledTicket = service.cancelTicket(id);
+//            return ResponseEntity.ok(cancelledTicket);
+//        } catch (EntityNotFoundException e) {
+//            return ResponseEntity.notFound().build();
+//        } catch (IllegalStateException e) {
+//            return ResponseEntity.badRequest().build();
+//        }
+//    }
 
-    @PutMapping("/{id}/confirm")
-    public ResponseEntity<TicketDTO> confirmReservation(
-            @PathVariable Long id,
-            @RequestBody Map<String, String> payload) {
-        String modePaiement = payload.get("modePaiement");
-        TicketDTO confirmedTicket = service.confirmReservation(id, modePaiement);
-        return ResponseEntity.ok(confirmedTicket);
-    }
+//    @PutMapping("/{id}/confirm")
+//    public ResponseEntity<TicketDTO> confirmReservation(
+//            @PathVariable Long id,
+//            @RequestBody Map<String, String> payload) {
+//        String modePaiement = payload.get("modePaiement");
+//        TicketDTO confirmedTicket = service.confirmReservation(id, modePaiement);
+//        return ResponseEntity.ok(confirmedTicket);
+//    }
 
     @PutMapping("/{id}/use")
     public ResponseEntity<TicketDTO> useTicket(@PathVariable Long id) {
@@ -93,5 +94,99 @@ public class TicketController {
         service.expireReservations();
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * Récupérer tous les tickets de l'utilisateur connecté
+     */
+    @GetMapping("/user")
+    public ResponseEntity<List<TicketDTO>> getTicketsByUser() {
+        try {
+            List<TicketDTO> tickets = service.getTicketsByUser();
+            return ResponseEntity.ok(tickets);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+    /**
+     * Créer un nouveau ticket (réservation ou achat)
+     */
+    @PostMapping("/create")
+    public ResponseEntity<?> createTicket(@RequestBody TicketDTO ticketDTO) {
+        try {
+            TicketDTO savedTicket = service.save(ticketDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedTicket);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erreur lors de la création du ticket"));
+        }
+    }
+
+    /**
+     * Confirmer une réservation (payer)
+     */
+    @PostMapping("/{id}/confirm")
+    public ResponseEntity<?> confirmReservation(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> request) {
+        try {
+            String modePaiement = request.get("modePaiement");
+            TicketDTO confirmedTicket = service.confirmReservation(id, modePaiement);
+            return ResponseEntity.ok(confirmedTicket);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erreur lors de la confirmation"));
+        }
+    }
+
+    /**
+     * Annuler un ticket
+     */
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelTicket(@PathVariable Long id) {
+        try {
+            TicketDTO cancelledTicket = service.cancelTicket(id);
+            return ResponseEntity.ok(cancelledTicket);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Erreur lors de l'annulation"));
+        }
+    }
+
+    /**
+     * Récupérer les tickets par statut
+     */
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<TicketDTO>> getTicketsByStatus(@PathVariable String status) {
+        try {
+            TicketStatus ticketStatus = TicketStatus.valueOf(status.toUpperCase());
+            List<TicketDTO> tickets = service.getTicketsByStatus(ticketStatus);
+            return ResponseEntity.ok(tickets);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
 
 }

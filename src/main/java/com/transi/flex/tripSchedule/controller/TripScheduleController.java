@@ -1,7 +1,9 @@
 package com.transi.flex.tripSchedule.controller;
 
 import com.transi.flex.tripSchedule.dto.ScheduleDTO;
+import com.transi.flex.tripSchedule.dto.SearchTripRequestDTO;
 import com.transi.flex.tripSchedule.dto.TripScheduleDTO;
+import com.transi.flex.tripSchedule.dto.TripSearchResultDTO;
 import com.transi.flex.tripSchedule.model.TripSchedule;
 import com.transi.flex.tripSchedule.service.TripScheduleService;
 import lombok.RequiredArgsConstructor;
@@ -92,5 +94,25 @@ public class TripScheduleController {
         } catch (Exception e) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
+    }
+
+    @PostMapping("/search")
+    public ResponseEntity<List<TripSearchResultDTO>> searchTrips(
+            @RequestBody SearchTripRequestDTO request
+    ) throws Exception {
+        List<TripSearchResultDTO> results = tripScheduleService.searchTrips(request);
+        return ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/cities/departure")
+    public ResponseEntity<List<String>> getDepartureCities() {
+        return ResponseEntity.ok(tripScheduleService.getDepartureCities());
+    }
+
+    @GetMapping("/cities/arrival")
+    public ResponseEntity<List<String>> getArrivalCities(
+            @RequestParam String villeDepart
+    ) {
+        return ResponseEntity.ok(tripScheduleService.getArrivalCities(villeDepart));
     }
 }

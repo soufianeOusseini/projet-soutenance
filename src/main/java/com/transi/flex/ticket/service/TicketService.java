@@ -1,6 +1,8 @@
 package com.transi.flex.ticket.service;
 
+import com.transi.flex.account.dto.UserDTO;
 import com.transi.flex.account.repository.UserRepository;
+import com.transi.flex.account.service.UserService;
 import com.transi.flex.colis.dto.ColisDTO;
 import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.config.CompanyContextHolder;
@@ -19,7 +21,9 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,39 +36,59 @@ public class TicketService {
     private final TrajetRepository trajetRepository;
     private final TripScheduleDAO tripScheduleDAO;
     private final PdfTicketService pdfTicketService;
+    private final UserService userService;
 
     @Transactional
     public TicketDTO save(TicketDTO ticketDTO) {
-        // Récupérer le trajet
+        UserDTO user = userService.getUserById(ticketDTO.getUserId());
+
         Trajet trajet = trajetRepository.findById(ticketDTO.getTrajetId()).orElse(null);
         if (trajet == null) {
             throw new EntityNotFoundException("Trajet non trouvé avec l'ID: " + ticketDTO.getTrajetId());
         }
 
-        // Récupérer la planification pour cette date et ce trajet
-        TripSchedule schedule = tripScheduleDAO.findByTrajetIdAndDate(ticketDTO.getTrajetId(), ticketDTO.getDate())
+        TripSchedule schedule = tripScheduleDAO
+                .findByTrajetIdAndDate(ticketDTO.getTrajetId(), ticketDTO.getDate())
                 .orElseThrow(() -> new EntityNotFoundException("Aucune planification trouvée pour ce trajet à cette date"));
 
-        // Vérifier les places disponibles
         if (schedule.getNombrePlacesDisponibles() <= 0) {
             throw new IllegalStateException("Aucune place disponible pour ce trajet");
         }
 
-        // Générer le numéro de ticket si nécessaire
         if (ticketDTO.getNumero() == null || ticketDTO.getNumero().isEmpty()) {
             ticketDTO.setNumero("TKT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         }
 
-        // Remplir automatiquement les données depuis la planification
+        // Remplir depuis la planification
         ticketDTO.setPrix(schedule.getPrix());
         ticketDTO.setHeureDepart(schedule.getHeureDepart());
         ticketDTO.setDate(schedule.getDateDepart());
 
-        // Définir le statut et la date limite selon le type
+        if (user != null) {
+            ticketDTO.setUser(user); // si ton mapper crée des entités transientes, pense à attacher côté service
+        }
+
+        // Statut & deadline
         if ("RESERVATION".equals(ticketDTO.getTypeTransaction())) {
             ticketDTO.setStatus(TicketStatus.RESERVE);
-            // Date limite : 24h après la création (modifiable selon vos besoins)
-            ticketDTO.setDateLimitePaiement(LocalDateTime.now().plusHours(24));
+
+            // Deadline = 1h avant le départ à la date du ticket
+            LocalDate dateDuTicket = schedule.getDateDepart();               // ou ticketDTO.getDate() si tu préfères
+            LocalTime heureDepart   = schedule.getHeureDepart();
+
+            LocalDateTime deadline;
+            if (dateDuTicket != null && heureDepart != null) {
+                deadline = LocalDateTime.of(dateDuTicket, heureDepart).minusHours(1);
+                // Si jamais c'est déjà passé (réservation tardive), on met au moins 1h à partir de maintenant
+                if (deadline.isBefore(LocalDateTime.now())) {
+                    deadline = LocalDateTime.now().plusHours(1);
+                }
+            } else {
+                // Filet de sécurité si la planif est incomplète
+                deadline = LocalDateTime.now().plusHours(1);
+            }
+            ticketDTO.setDateLimitePaiement(deadline);
+
         } else {
             ticketDTO.setStatus(TicketStatus.PAYE);
             ticketDTO.setTypeTransaction("ACHAT");
@@ -74,10 +98,8 @@ public class TicketService {
         ticket.setTrajet(trajet);
         ticket.setAgency(schedule.getAgency());
 
-        // Sauvegarder le ticket
         Ticket savedTicket = repository.save(ticket);
 
-        // Pour les achats immédiats, diminuer directement les places
         if ("ACHAT".equals(ticketDTO.getTypeTransaction())) {
             schedule.setNombrePlacesDisponibles(schedule.getNombrePlacesDisponibles() - 1);
             tripScheduleDAO.save(schedule);
@@ -232,5 +254,18 @@ public class TicketService {
 
     public List<TicketDTO> getByUser(Long id){
         return mapper.toDtos(repository.findByUserId(id));
+    }
+
+    public List<TicketDTO> getTicketsByUser() {
+        try {
+                UserDTO currentUser = userService.getCurrentUser();
+            if (currentUser == null) {
+                throw new EntityNotFoundException("Utilisateur non trouvé");
+            }
+            List<Ticket> tickets = repository.findByUserId(currentUser.getId());
+            return mapper.toDtos(tickets);
+        } catch (Exception e) {
+            throw new RuntimeException("Erreur lors de la récupération des tickets: " + e.getMessage());
+        }
     }
 }
