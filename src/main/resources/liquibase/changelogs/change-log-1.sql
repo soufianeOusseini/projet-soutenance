@@ -421,3 +421,6 @@ ALTER TABLE t_agency ADD CONSTRAINT fk_agency_companies FOREIGN KEY (company_id)
 --changeset soussein:insert_profile
 INSERT INTO t_profile (name) VALUES ('ADMIN_SYSTEM');
 INSERT INTO t_profile (name) VALUES ('AGENCY');
+
+--changeset sousseini:add_company_admin_role
+INSERT INTO t_role (name) VALUES ('ROLE_COMPANY_ADMIN');

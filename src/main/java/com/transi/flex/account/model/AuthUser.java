@@ -1,4 +1,3 @@
-// Classe AuthUser
 package com.transi.flex.account.model;
 
 import java.util.ArrayList;

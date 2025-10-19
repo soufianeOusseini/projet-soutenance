@@ -98,7 +98,7 @@ public class UserService {
 		String password = buildPassword(dto);
 		User model = mapper.toModel(dto);
 		model.addProfile(UserProfile.COMPANY);
-		model.addRole(roleRepository.findByName("ROLE_ADMIN").get());
+		model.addRole(roleRepository.findByName("ROLE_COMPANY_ADMIN").get());
 		model.setCompany(companyMapper.toModel(company));
 		if (AgencyContextHolder.getCurrentAgencyId() !=null){
 			model.setAgency(agencyRepository.findById(AgencyContextHolder.getCurrentAgencyId()).orElse(null));

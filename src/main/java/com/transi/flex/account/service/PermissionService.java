@@ -14,6 +14,7 @@ import com.transi.flex.company.model.Company;
 import com.transi.flex.company.service.CompanyService;
 import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.config.CompanyContextHolder;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
@@ -31,34 +32,35 @@ import com.transi.flex.account.repository.RoleRepository;
 import com.transi.flex.account.repository.UserRepository;
 
 @Service
+@RequiredArgsConstructor
 public class PermissionService {
 
-    @Autowired
-    private UserRepository userRepository;
 
-    @Autowired
-    private UserService userService;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private RoleRepository roleRepository;
 
-    @Autowired
-    private PermissionRepository permissionRepository;
+    private final UserService userService;
 
-    @Autowired
-    private PermissionMapper permissionMapper;
 
-    @Autowired
-    private CompanyService companyService;
+    private final RoleRepository roleRepository;
 
-    @Autowired
-    private  CompanyMapper companyMapper;
 
-    @Autowired
-    private AgencyService agencyService;
+    private final PermissionRepository permissionRepository;
 
-    @Autowired
-    private AgencyMapper agencyMapper;
+
+    private final PermissionMapper permissionMapper;
+
+
+    private final CompanyService companyService;
+
+
+    private  final CompanyMapper companyMapper;
+
+
+    private  final AgencyService agencyService;
+
+
+    private  final AgencyMapper agencyMapper;
 
     @Transactional
     public void addPermissionToRole(Long roleId, String permissionName) {
@@ -142,8 +144,9 @@ public class PermissionService {
 
         List<String> permissions = new ArrayList<>();
         if (user.get().isSuperAdmin()) {
-            return getAllAgencyPermissions(user.get().getCompany().getId());
+            return getAllSystemPermissions();
         }
+
         user.get().getRoles().forEach(role -> {
             permissions.add(role.getName());
             role.getPermissions().forEach(permission -> {
@@ -153,10 +156,10 @@ public class PermissionService {
         return permissions;
     }
 
-    private List<String> getAllAgencyPermissions(Long id) {
-        List<Role> companyRoles = roleRepository.findByAgencyId(id);
+    private List<String> getAllSystemPermissions() {
+        List<Role> allRoles = roleRepository.findAll();
         List<String> permissions = new ArrayList<>();
-        companyRoles.forEach(role -> {
+        allRoles.forEach(role -> {
             permissions.add(role.getName());
             role.getPermissions().forEach(permission -> {
                 permissions.add(permission.getName());
