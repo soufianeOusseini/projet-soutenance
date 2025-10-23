@@ -4,8 +4,10 @@ import com.transi.flex.agency.dao.AgencyRepository;
 import com.transi.flex.bus.repository.BusRepository;
 import com.transi.flex.colis.enums.ColisStatus;
 import com.transi.flex.colis.repository.ColisRepository;
+import com.transi.flex.company.repository.CompanyRepository;
 import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.dashboard.dto.DashboardDTO;
+import com.transi.flex.dashboard.dto.SuperDashboardStatsDTO;
 import com.transi.flex.ticket.enums.TicketStatus;
 import com.transi.flex.ticket.repository.TicketRepository;
 import com.transi.flex.trajet.repository.TrajetRepository;
@@ -14,9 +16,11 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,6 +32,7 @@ public class DashboardService {
     private final TrajetRepository trajetRepository;
     private final BusRepository busRepository;
     private final AgencyRepository agencyRepository;
+    private final CompanyRepository companyRepository;
 
     public DashboardDTO getDashboardData() {
         return DashboardDTO.builder()
@@ -225,5 +230,53 @@ public class DashboardService {
             long months = days / 30;
             return "il y a " + months + " mois";
         }
+    }
+
+    public SuperDashboardStatsDTO getDashboardStats() {
+        SuperDashboardStatsDTO stats = new SuperDashboardStatsDTO();
+
+        // Total des compagnies
+        stats.setTotalCompanies(companyRepository.count());
+
+        // Total des agences
+        stats.setTotalAgencies(agencyRepository.count());
+
+        // Total des tickets
+        stats.setTotalTickets(ticketRepository.count());
+
+        // Total des ventes (somme des prix de tous les tickets payés)
+        Double totalSales = ticketRepository.sumTotalSales();
+        stats.setTotalSales(totalSales != null ? totalSales : 0.0);
+
+        // Ventes mensuelles (6 derniers mois)
+        stats.setMonthlySales(getMonthlySales());
+
+        return stats;
+    }
+
+    private List<SuperDashboardStatsDTO.MonthlySalesDTO> getMonthlySales() {
+        List<SuperDashboardStatsDTO.MonthlySalesDTO> monthlySales = new ArrayList<>();
+        LocalDate now = LocalDate.now();
+
+        for (int i = 6; i >= 0; i--) {
+            LocalDate monthDate = now.minusMonths(i);
+            int year = monthDate.getYear();
+            int month = monthDate.getMonthValue();
+
+            // Récupérer les ventes du mois
+            Double sales = ticketRepository.sumSalesByYearAndMonth(year, month);
+
+            // Nom du mois en français (3 premières lettres)
+            String monthName = monthDate.getMonth()
+                    .getDisplayName(TextStyle.SHORT, Locale.FRENCH)
+                    .substring(0, 3);
+
+            monthlySales.add(new SuperDashboardStatsDTO.MonthlySalesDTO(
+                    monthName,
+                    sales != null ? sales : 0.0
+            ));
+        }
+
+        return monthlySales;
     }
 }

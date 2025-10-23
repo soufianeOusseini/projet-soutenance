@@ -1,6 +1,8 @@
 package com.transi.flex.company.model;
 
 import com.transi.flex.agency.model.Agency;
+import com.transi.flex.billings.model.Invoice;
+import com.transi.flex.billings.model.Subscription;
 import com.transi.flex.bus.model.Bus;
 import com.transi.flex.colis.model.Colis;
 import com.transi.flex.company.enums.CompanyStatus;
@@ -10,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -57,8 +60,32 @@ public class Company {
     @Column(name = "LOGO_PATH")
     private String logoPath;
 
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
+    private Set<Subscription> subscriptions = new HashSet<>();
+
+    @OneToMany(mappedBy = "company", cascade = CascadeType.ALL)
+    private Set<Invoice> invoices = new HashSet<>();
+
+    @Transient
+    public Subscription getActiveSubscription() {
+        return subscriptions.stream()
+                .filter(s -> s.getActive() &&
+                        s.getEndDate().isAfter(LocalDate.now()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    @Transient
+    public boolean hasActiveSubscription() {
+        return getActiveSubscription() != null;
+    }
+
     public Company(Long id) {
         this.id = id;
+    }
+
+    public boolean isActive() {
+        return this.status == CompanyStatus.ACTIVE;
     }
 
 }

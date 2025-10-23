@@ -1,16 +1,21 @@
 package com.transi.flex.account.controller;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -49,12 +54,33 @@ public class AuthenticationController {
                                           final HttpServletRequest request, final HttpServletResponse response) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword()));
+
         if (authentication.isAuthenticated()) {
             var user = ((AuthUser) authentication.getPrincipal()).getUser();
-            if (user.isCompanyUser() && user.getCompany() == null) {
-                log.error("An error during getting company name");
-                throw new BadCredentialsException("Invalid company and user.");
+
+            // Vérification de la compagnie (prioritaire)
+            if (user.isCompanyUser()) {
+                if (user.getCompany() == null) {
+                    log.error("User {} has no company assigned", user.getUsername());
+                    throw new BadCredentialsException("Invalid company and user.");
+                }
+
+                if (!user.getCompany().isActive()) {
+                    log.warn("User {} tried to login but company {} is inactive",
+                            user.getUsername(), user.getCompany().getName());
+                    throw new BadCredentialsException("Your company account is inactive. Please contact support.");
+                }
             }
+
+            // Vérification de l'agence (si l'utilisateur n'est pas super admin)
+            if (!user.isSuperAdmin() && user.getAgency() != null) {
+                if (!user.getAgency().isActive()) {
+                    log.warn("User {} tried to login but agency {} is inactive",
+                            user.getUsername(), user.getAgency().getName());
+                    throw new BadCredentialsException("Your agency account is inactive. Please contact your company administrator.");
+                }
+            }
+
             return ResponseEntity.ok().body(buildAuthResponse(user));
         } else {
             throw new UsernameNotFoundException("invalid user request !");
@@ -86,10 +112,30 @@ public class AuthenticationController {
     @PostMapping(value = "/reset-password")
     public AuthResponse authenticate(@RequestBody ResetPasswordRequest request) throws Exception {
         final User user = passwordService.resetPassword(request.password());
-        if (user.isCompanyUser() && user.getCompany() == null) {
-            log.error("An error during getting company name");
-            throw new BadCredentialsException("Invalid company and user.");
+
+        // Vérification de la compagnie (prioritaire)
+        if (user.isCompanyUser()) {
+            if (user.getCompany() == null) {
+                log.error("User {} has no company assigned during password reset", user.getUsername());
+                throw new BadCredentialsException("Invalid company and user.");
+            }
+
+            if (!user.getCompany().isActive()) {
+                log.warn("User {} tried to reset password but company {} is inactive",
+                        user.getUsername(), user.getCompany().getName());
+                throw new BadCredentialsException("Your company account is inactive. Please contact support.");
+            }
         }
+
+        // Vérification de l'agence
+        if (!user.isSuperAdmin() && user.getAgency() != null) {
+            if (!user.getAgency().isActive()) {
+                log.warn("User {} tried to reset password but agency {} is inactive",
+                        user.getUsername(), user.getAgency().getName());
+                throw new BadCredentialsException("Your agency account is inactive. Please contact your company administrator.");
+            }
+        }
+
         return buildAuthResponse(user);
     }
 

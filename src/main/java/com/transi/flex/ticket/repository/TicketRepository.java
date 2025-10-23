@@ -44,4 +44,11 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
     long countByDateBetweenAndAgencyId(LocalDate startDate, LocalDate endDate, Long agencyId);
 
     long countByAgencyId(Long agencyId);
+
+    @Query("SELECT SUM(t.prix) FROM Ticket t WHERE t.status = 'PAYE'")
+    Double sumTotalSales();
+
+    @Query("SELECT SUM(t.prix) FROM Ticket t WHERE t.status = 'PAYE' " +
+            "AND YEAR(t.date) = :year AND MONTH(t.date) = :month")
+    Double sumSalesByYearAndMonth(@Param("year") int year, @Param("month") int month);
 }

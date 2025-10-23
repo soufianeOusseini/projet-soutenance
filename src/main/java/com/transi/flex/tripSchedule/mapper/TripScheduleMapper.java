@@ -25,7 +25,7 @@ public interface TripScheduleMapper {
     TripSearchResultDTO toTripSearchDto(TripSchedule tripSchedule);
 
     /**
-     * Méthode de mapping en batch pour les résultats de recherche
+     * MÃ©thode de mapping en batch pour les rÃ©sultats de recherche
      */
     List<TripSearchResultDTO> toTripSearchDtos(List<TripSchedule> tripSchedules);
 }

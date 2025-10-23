@@ -436,3 +436,96 @@ ALTER TABLE T_COLIS
 --changeset sousseini:add_create_at_to_colis
 ALTER TABLE T_COLIS ADD COLUMN IF NOT EXISTS CREATED_AT TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
 ALTER TABLE T_COLIS ADD COLUMN IF NOT EXISTS UPDATED_AT TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+
+--changeset sousseini:add_ticket_permissions
+INSERT INTO t_permission ("name") VALUES ('TICKET_READ');
+INSERT INTO t_permission ("name") VALUES ('TICKET_ADD');
+INSERT INTO t_permission ("name") VALUES ('TICKET_EDIT');
+INSERT INTO t_permission ("name") VALUES ('TICKET_DELETE');
+
+--changeset sousseini:add_bus_permissions
+INSERT INTO t_permission ("name") VALUES ('BUS_ADD');
+INSERT INTO t_permission ("name") VALUES ('BUS_EDIT');
+INSERT INTO t_permission ("name") VALUES ('BUS_DELETE');
+
+--changeset sousseini:add_colis_permissions
+INSERT INTO t_permission ("name") VALUES ('COLIS_ADD');
+INSERT INTO t_permission ("name") VALUES ('COLIS_EDIT');
+INSERT INTO t_permission ("name") VALUES ('COLIS_DELETE');
+
+
+--changeset sousseini:add_driver_permissions
+INSERT INTO t_permission ("name") VALUES ('DRIVER_READ');
+INSERT INTO t_permission ("name") VALUES ('DRIVER_ADD');
+INSERT INTO t_permission ("name") VALUES ('DRIVER_EDIT');
+INSERT INTO t_permission ("name") VALUES ('DRIVER_DELETE');
+
+--changeset sousseini:add_trip_schedule_permissions
+INSERT INTO t_permission ("name") VALUES ('TRIP_SCHEDULE_READ');
+INSERT INTO t_permission ("name") VALUES ('TRIP_SCHEDULE_ADD');
+INSERT INTO t_permission ("name") VALUES ('TRIP_SCHEDULE_EDIT');
+INSERT INTO t_permission ("name") VALUES ('TRIP_SCHEDULE_DELETE');
+
+--changeset sousseini:add_user_permissions
+INSERT INTO t_permission ("name") VALUES ('USERS_ADD');
+INSERT INTO t_permission ("name") VALUES ('USERS_EDIT');
+INSERT INTO t_permission ("name") VALUES ('USERS_DELETE');
+
+--changeset sousseini:add_agency_permissions
+INSERT INTO t_permission ("name") VALUES ('AGENCY_READ');
+INSERT INTO t_permission ("name") VALUES ('AGENCY_ADD');
+INSERT INTO t_permission ("name") VALUES ('AGENCY_EDIT');
+INSERT INTO t_permission ("name") VALUES ('AGENCY_DELETE');
+
+
+--changeset sousseini:create_table_t_subscription_plans
+CREATE TABLE IF NOT EXISTS t_subscription_plan (
+                                                   id BIGSERIAL PRIMARY KEY,
+                                                   name VARCHAR(100) NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    duration_in_days INT NOT NULL,
+    description TEXT,
+    active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+
+
+--changeset sousseini:create_table_t_subscriptions
+CREATE TABLE IF NOT EXISTS t_subscription (
+                                              id BIGSERIAL PRIMARY KEY,
+                                              company_id BIGINT NOT NULL,
+                                              plan_id BIGINT NOT NULL,
+                                              start_date DATE NOT NULL,
+                                              end_date DATE NOT NULL,
+                                              active BOOLEAN DEFAULT true,
+                                              auto_renew BOOLEAN DEFAULT false,
+                                              cancelled_at DATE,
+                                              created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                              updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                                              CONSTRAINT fk_subscription_company FOREIGN KEY (company_id) REFERENCES t_company(id) ON DELETE CASCADE,
+    CONSTRAINT fk_subscription_plan FOREIGN KEY (plan_id) REFERENCES t_subscription_plan(id)
+    );
+
+
+--changeset sousseini:create_table_t_invoices
+CREATE TABLE IF NOT EXISTS t_invoice (
+                                         id BIGSERIAL PRIMARY KEY,
+                                         company_id BIGINT NOT NULL,
+                                         subscription_id BIGINT,
+                                         invoice_number VARCHAR(50) UNIQUE NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    issue_date DATE NOT NULL,
+    due_date DATE NOT NULL,
+    payment_date DATE,
+    payment_method VARCHAR(50),
+    status VARCHAR(30) DEFAULT 'PENDING',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_invoice_company FOREIGN KEY (company_id) REFERENCES t_company(id) ON DELETE CASCADE,
+    CONSTRAINT fk_invoice_subscription FOREIGN KEY (subscription_id) REFERENCES t_subscription(id)
+    );

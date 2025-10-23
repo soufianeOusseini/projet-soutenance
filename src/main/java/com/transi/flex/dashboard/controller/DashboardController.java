@@ -2,6 +2,7 @@ package com.transi.flex.dashboard.controller;
 
 
 import com.transi.flex.dashboard.dto.DashboardDTO;
+import com.transi.flex.dashboard.dto.SuperDashboardStatsDTO;
 import com.transi.flex.dashboard.service.DashboardService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,5 +24,11 @@ public class DashboardController {
     public ResponseEntity<DashboardDTO> getDashboard() {
         DashboardDTO dashboard = dashboardService.getDashboardData();
         return ResponseEntity.ok(dashboard);
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<SuperDashboardStatsDTO> getDashboardStats() {
+        SuperDashboardStatsDTO stats = dashboardService.getDashboardStats();
+        return ResponseEntity.ok(stats);
     }
 }

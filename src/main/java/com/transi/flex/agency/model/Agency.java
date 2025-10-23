@@ -87,4 +87,8 @@ public class Agency {
 
     @OneToMany(mappedBy = "agency", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<CompanyAccount> accounts = new HashSet<>();
+
+    public boolean isActive() {
+        return this.status == AgencyStatus.ACTIVE;
+    }
 }
