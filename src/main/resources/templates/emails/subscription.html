@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Abonnement bientôt expiré</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .email-wrapper {
+            background-color: #f4f4f4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+        }
+        .header img {
+            max-width: 180px;
+            margin-bottom: 15px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+            line-height: 1.8;
+            color: #333333;
+        }
+        .greeting {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .alert-box {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .alert-box.expired {
+            background-color: #f8d7da;
+            border-left-color: #dc3545;
+        }
+        .alert-box h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #856404;
+        }
+        .alert-box.expired h3 {
+            color: #721c24;
+        }
+        .subscription-details {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #666;
+        }
+        .detail-value {
+            color: #333;
+            font-weight: 500;
+        }
+        .expiration-date {
+            font-size: 20px;
+            font-weight: 700;
+            color: #dc3545;
+        }
+        .days-remaining {
+            display: inline-block;
+            background-color: #ffc107;
+            color: #000;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .days-remaining.critical {
+            background-color: #dc3545;
+            color: white;
+        }
+        .cta-section {
+            text-align: center;
+            margin: 35px 0;
+        }
+        .button {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white !important;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 16px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: transform 0.3s ease;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .info-section {
+            background-color: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px 20px;
+            margin: 25px 0;
+            border-radius: 4px;
+        }
+        .info-section p {
+            margin: 5px 0;
+            color: #0c5460;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            text-align: center;
+            padding: 30px 20px;
+            color: #6c757d;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .footer strong {
+            color: #495057;
+            display: block;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .social-links {
+            margin: 20px 0;
+        }
+        .social-links a {
+            display: inline-block;
+            margin: 0 10px;
+            color: #667eea;
+            text-decoration: none;
+        }
+        @media only screen and (max-width: 600px) {
+            .container {
+                width: 100% !important;
+            }
+            .content {
+                padding: 20px !important;
+            }
+            .button {
+                padding: 12px 30px !important;
+                font-size: 14px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="email-wrapper">
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <img th:if="${hasLogo}" th:src="${logoBase64}" alt="Logo" />
+            <h1>⚠️ Notification d'Expiration d'Abonnement</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <p class="greeting">
+                Bonjour <span th:text="${user.firstName + ' ' + user.lastName}">Utilisateur</span>,
+            </p>
+
+            <!-- Alert Box - Dynamique selon statut -->
+            <div class="alert-box" th:classappend="${isExpired} ? 'expired' : ''">
+                <h3 th:if="${isExpired}">🔴 Votre abonnement a expiré</h3>
+                <h3 th:unless="${isExpired}">⚠️ Votre abonnement expire bientôt</h3>
+
+                <p th:if="${isExpired}">
+                    Votre abonnement pour <strong th:text="${companyName}"></strong> a expiré le
+                    <strong th:text="${#temporals.format(expirationDate, 'dd/MM/yyyy')}"></strong>.
+                    Veuillez le renouveler immédiatement pour continuer à utiliser nos services.
+                </p>
+
+                <p th:unless="${isExpired}">
+                    Votre abonnement pour <strong th:text="${companyName}"></strong> expirera dans
+                    <span class="days-remaining" th:classappend="${daysRemaining <= 3} ? 'critical' : ''">
+                        <span th:text="${daysRemaining}"></span> jour<span th:if="${daysRemaining > 1}">s</span>
+                    </span>
+                </p>
+            </div>
+
+            <!-- Subscription Details -->
+            <div class="subscription-details">
+                <h3 style="margin-top: 0; color: #333; font-size: 18px;">📋 Détails de l'abonnement</h3>
+
+                <div class="detail-row">
+                    <span class="detail-label">Plan d'abonnement :</span>
+                    <span class="detail-value" th:text="${planName}">Plan Mensuel</span>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Prix :</span>
+                    <span class="detail-value">
+                        <span th:text="${#numbers.formatDecimal(planPrice, 0, 'COMMA', 0, 'POINT')}">50,000</span> FCFA
+                    </span>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Date de début :</span>
+                    <span class="detail-value" th:text="${#temporals.format(startDate, 'dd/MM/yyyy')}">01/10/2025</span>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Date d'expiration :</span>
+                    <span class="detail-value expiration-date" th:text="${#temporals.format(expirationDate, 'dd/MM/yyyy')}">31/10/2025</span>
+                </div>
+
+                <div class="detail-row" th:if="${isExpired}">
+                    <span class="detail-label">Statut :</span>
+                    <span class="detail-value" style="color: #dc3545; font-weight: 700;">❌ EXPIRÉ</span>
+                </div>
+
+                <div class="detail-row" th:unless="${isExpired}">
+                    <span class="detail-label">Statut :</span>
+                    <span class="detail-value" style="color: #ffc107; font-weight: 700;">⏰ ACTIF (Expire bientôt)</span>
+                </div>
+            </div>
+
+            <!-- Info Section -->
+            <div class="info-section">
+                <p><strong>ℹ️ Important :</strong></p>
+                <p th:if="${isExpired}">
+                    • Vos services sont actuellement suspendus<br>
+                    • Renouvelez dès maintenant pour retrouver l'accès complet<br>
+                    • Vos données seront conservées pendant 30 jours
+                </p>
+                <p th:unless="${isExpired}">
+                    • Renouvelez avant la date d'expiration pour éviter toute interruption de service<br>
+                    • Le renouvellement automatique peut être activé dans vos paramètres<br>
+                    • Votre historique et vos données seront conservés
+                </p>
+            </div>
+
+            <!-- CTA Button -->
+            <div class="cta-section">
+                <a th:href="${loginUrl}" class="button">
+                    🔄 Renouveler mon abonnement
+                </a>
+                <p style="margin-top: 15px; font-size: 13px; color: #666;">
+                    Ou connectez-vous à votre espace pour gérer votre abonnement
+                </p>
+            </div>
+
+            <p style="margin-top: 30px; color: #666;">
+                Si vous avez des questions ou besoin d'assistance, n'hésitez pas à nous contacter.
+            </p>
+
+            <p style="color: #666;">
+                Cordialement,<br>
+                <strong style="color: #333;">L'équipe Transi-Flex</strong>
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <strong th:text="${companyName}">Transi-Flex</strong>
+
+            <p th:if="${companyAddress !=null}" style="margin: 5px 0;">
+                📍 <span th:text="${companyAddress}">Adresse</span>
+            </p>
+
+            <p style="margin: 5px 0;">
+                <span th:if="${companyPhone !=null}">
+                    📞 <span th:text="${companyPhone}">Téléphone</span>
+                </span>
+                <span th:if="${companyPhone !=null and companyEmail !=null}"> | </span>
+                <span th:if="${companyEmail !=null}">
+                    ✉️ <span th:text="${companyEmail}">Email</span>
+                </span>
+            </p>
+
+            <div class="social-links">
+                <a href="#" th:if="${facebookUrl}">Facebook</a>
+                <a href="#" th:if="${twitterUrl}">Twitter</a>
+                <a href="#" th:if="${linkedinUrl}">LinkedIn</a>
+            </div>
+
+            <p style="margin-top: 20px; font-size: 11px; color: #999;">
+                Cet email a été envoyé automatiquement. Merci de ne pas y répondre.<br>
+                © <span th:text="${#temporals.year(#temporals.createNow())}">2025</span> Transi-Flex. Tous droits réservés.
+            </p>
+        </div>
+    </div>
+</div>
+</body>
+</html>

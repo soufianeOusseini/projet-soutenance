@@ -35,7 +35,6 @@ public class CompanyController {
         return new ResponseEntity<>(service.add(dto), HttpStatus.CREATED);
     }
 
-
     @PostMapping
     public  ResponseEntity<CompanyDTO> update(@RequestParam(name = "logoPath", required = false) MultipartFile logoPath,
                          @RequestParam("company") String companyStr) throws Exception {
@@ -58,5 +57,11 @@ public class CompanyController {
     @GetMapping("/change-status/{id}")
     public void changeStatus(@PathVariable(name = "id") Long id){
         service.changeStatus(id);
+    }
+
+    @PostMapping("/logo")
+    public  void updateLogo(@RequestParam(name = "logoPath", required = false) MultipartFile logoPath,
+                                              @RequestParam("id") Long id) throws Exception {
+        service.updateLogo(id, Optional.ofNullable(logoPath));
     }
 }

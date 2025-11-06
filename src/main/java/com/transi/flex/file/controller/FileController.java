@@ -25,20 +25,20 @@ public class FileController {
 
     private final FileUtility fileUtility;
 
-    @PostMapping("add-docs")
-    public void addFiles(
-            @RequestParam(name = "documents", required = false) MultipartFile[] documents) {
-        service.addFiles(documents);
-    }
-
-
-    @GetMapping("/document/{fileId}")
-    public ResponseEntity<?> getDoc(@PathVariable(name = "fileId") Long fileId) throws Exception {
-        Resource file = fileUtility.get(fileId);
-        Path path = file.getFile().toPath();
-        return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, Files.probeContentType(path))
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + file.getFilename() + "\"")
-                .body(file);
-    }
+//    @PostMapping("add-docs")
+//    public void addFiles(
+//            @RequestParam(name = "documents", required = false) MultipartFile[] documents) {
+//        service.addFiles(documents);
+//    }
+//
+//
+//    @GetMapping("/document/{fileId}")
+//    public ResponseEntity<?> getDoc(@PathVariable(name = "fileId") Long fileId) throws Exception {
+//        Resource file = fileUtility.get(fileId);
+//        Path path = file.getFile().toPath();
+//        return ResponseEntity.ok().header(HttpHeaders.CONTENT_TYPE, Files.probeContentType(path))
+//                .header(HttpHeaders.CONTENT_DISPOSITION,
+//                        "attachment; filename=\"" + file.getFilename() + "\"")
+//                .body(file);
+//    }
 }

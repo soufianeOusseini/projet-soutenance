@@ -4,6 +4,7 @@ import com.transi.flex.account.dto.UserDTO;
 import com.transi.flex.reservation.enums.ModePaiement;
 import com.transi.flex.ticket.enums.TicketStatus;
 import com.transi.flex.trajet.dto.TrajetDTO;
+import jakarta.persistence.Column;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -43,11 +44,15 @@ public class TicketDTO {
     private String typeTransaction;
     private LocalDateTime dateLimitePaiement;
 
-    private String trajetInfo; // Ex: "Lomé → Kara"
+    private String trajetInfo;
     private String companyName;
     private Long agencyId;
     private UserDTO user;
+    private Integer seatNumber;
 
+    private String cancellation_reason;
+
+    private String comment;
     public boolean isReservationExpired() {
         return "RESERVATION".equals(typeTransaction)
                 && dateLimitePaiement != null

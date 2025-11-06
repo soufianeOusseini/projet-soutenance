@@ -6,12 +6,14 @@ import com.transi.flex.ticket.service.TicketService;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -56,14 +58,14 @@ public class TicketController {
 //        }
 //    }
 
-//    @PutMapping("/{id}/confirm")
-//    public ResponseEntity<TicketDTO> confirmReservation(
-//            @PathVariable Long id,
-//            @RequestBody Map<String, String> payload) {
-//        String modePaiement = payload.get("modePaiement");
-//        TicketDTO confirmedTicket = service.confirmReservation(id, modePaiement);
-//        return ResponseEntity.ok(confirmedTicket);
-//    }
+    @PutMapping("/{id}/confirm")
+    public ResponseEntity<TicketDTO> confirmReservationWeb(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> payload) {
+        String modePaiement = payload.get("modePaiement");
+        TicketDTO confirmedTicket = service.confirmReservation(id, modePaiement);
+        return ResponseEntity.ok(confirmedTicket);
+    }
 
     @PutMapping("/{id}/use")
     public ResponseEntity<TicketDTO> useTicket(@PathVariable Long id) {
@@ -155,10 +157,11 @@ public class TicketController {
     /**
      * Annuler un ticket
      */
-    @PostMapping("/{id}/cancel")
-    public ResponseEntity<?> cancelTicket(@PathVariable Long id) {
+    @PutMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelTicket(@PathVariable Long id,@RequestParam(required = false) String cancellationReason,
+                                          @RequestParam(required = false) String comment) {
         try {
-            TicketDTO cancelledTicket = service.cancelTicket(id);
+            TicketDTO cancelledTicket = service.cancelTicket(id, cancellationReason, comment);
             return ResponseEntity.ok(cancelledTicket);
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -189,4 +192,11 @@ public class TicketController {
     }
 
 
+    @GetMapping("/occupied-seats/{trajetId}/{date}")
+    public ResponseEntity<List<Integer>> getOccupiedSeats(
+            @PathVariable Long trajetId,
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        List<Integer> occupiedSeats = service.getOccupiedSeats(trajetId, date);
+        return ResponseEntity.ok(occupiedSeats);
+    }
 }

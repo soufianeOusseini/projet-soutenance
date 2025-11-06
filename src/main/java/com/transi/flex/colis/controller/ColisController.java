@@ -6,6 +6,9 @@ import com.transi.flex.colis.enums.ColisStatus;
 import com.transi.flex.colis.model.Colis;
 import com.transi.flex.colis.service.ColisService;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -63,5 +66,17 @@ public class ColisController {
     @GetMapping("user-colis")
     public List<ColisDTO> getUserColis(){
         return service.getUserColis();
+    }
+
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> downloadTicketPdf(@PathVariable Long id) {
+        byte[] pdfBytes = service.generateColisPdf(id);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "colis-" + id + ".pdf");
+        headers.setCacheControl("must-revalidate, post-check=0, pre-check=0");
+
+        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
 }

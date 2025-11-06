@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 
 import com.transi.flex.account.dto.RegisterRequest;
 import com.transi.flex.agency.dao.AgencyRepository;
+import com.transi.flex.agency.model.Agency;
+import com.transi.flex.company.repository.CompanyRepository;
 import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.file.enums.FileType;
 import com.transi.flex.file.service.FileUtility;
@@ -55,6 +57,7 @@ public class UserService {
 	private final MessageSource messageSource;
 	private final FileUtility fileUtility;
 	private final AgencyRepository agencyRepository;
+	private final CompanyRepository companyRepository;
 
 	@Value("${mail.noreplay.from}")
 	private String fromEmail;
@@ -82,6 +85,16 @@ public class UserService {
 		}
 		if (AgencyContextHolder.getCurrentAgencyId() != null) {
 			model.setAgency(agencyRepository.findById(AgencyContextHolder.getCurrentAgencyId()).orElse(null));
+			model.setCompany(agencyRepository.findById(AgencyContextHolder.getCurrentAgencyId()).orElse(null).getCompany());
+		}
+		if (dto.getAgencyId() != null) {
+			model.setAgency(agencyRepository.findById(dto.getAgencyId()).orElse(null));
+		}
+		if (dto.getRole() == null && dto.getProfile() == UserProfile.ADMIN) {
+			model.addRole("ROLE_ADMIN");
+		}
+		if(dto.getRole() !=null){
+			model.addRole(dto.getRole().getName());
 		}
 		User savedUser = repository.save(model);
 		if (dto.getId() == null) {
@@ -204,12 +217,23 @@ public class UserService {
 	}
 
 	public void uploadProfile(MultipartFile path) throws Exception {
+		Agency agency = null;
+		Company company = null;
+		if (AgencyContextHolder.getCurrentAgencyId() !=null){
+			agency = agencyRepository.findById(AgencyContextHolder.getCurrentAgencyId())
+					.orElseThrow(() -> new EntityNotFoundException("Agency not found"));
+		}
+		if(CompanyContextHolder.getCurrentId() !=null){
+			company = companyRepository.findById(CompanyContextHolder.getCurrentId())
+					.orElseThrow(() -> new EntityNotFoundException("Company not found"));
+		}
 		User user = mapper.toModel(getCurrentUser());
+
 		if (user.getProfilePath() !=null){
-			fileUtility.deleteFile(user.getProfilePath());
+			fileUtility.deleteFile(user.getProfilePath(), agency !=null ? agency.getCompany() : company);
 		}
 		String profilePath = fileUtility.save(path, path.getOriginalFilename(),
-				FileType.USER_PROFILE);
+				FileType.USER_PROFILE,agency !=null ? agency.getCompany() : company);
 		user.setProfilePath(profilePath);
 		repository.save(user);
 	}

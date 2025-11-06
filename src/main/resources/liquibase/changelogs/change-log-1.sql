@@ -529,3 +529,43 @@ CREATE TABLE IF NOT EXISTS t_invoice (
     CONSTRAINT fk_invoice_company FOREIGN KEY (company_id) REFERENCES t_company(id) ON DELETE CASCADE,
     CONSTRAINT fk_invoice_subscription FOREIGN KEY (subscription_id) REFERENCES t_subscription(id)
     );
+
+--changeset sousseini:add_column_created_by_to_colis
+ALTER TABLE T_COLIS ADD COLUMN IF NOT EXISTS CREATED_BY BIGINT NULL;
+ALTER TABLE T_COLIS ADD CONSTRAINT fk_created_by_colis FOREIGN KEY (CREATED_BY) REFERENCES T_USER(id);
+
+--changeset sousseini:add_column_seat_number_to_t_ticket
+ALTER TABLE T_TICKET ADD COLUMN IF NOT EXISTS SEAT_NUMBER BIGINT NULL;
+
+--changeset sousseini:create_table_t_deposit_request_paygate
+CREATE TABLE IF NOT EXISTS T_DEPOSIT_REQUEST_PAYGATE(
+    id varchar(254) PRIMARY KEY,
+    amount DECIMAL(10,2) NOT NULL,
+    description TEXT,
+    phone_number varchar(20),
+    identifier varchar(254),
+    network varchar(254),
+    tx_reference varchar(254),
+    status int,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+--changeset sousseini:create_table_t_deposit_response_paygateS
+CREATE TABLE IF NOT EXISTS T_DEPOSIT_RESPONSE_PAYGATE(
+    id varchar(254) PRIMARY KEY,
+    tx_reference varchar(254),
+    status varchar(254),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    request varchar(254),
+    CONSTRAINT fk_request_deposit_response FOREIGN KEY (request) REFERENCES T_DEPOSIT_REQUEST_PAYGATE(id)
+
+    );
+
+
+--changeset sousseini:add_column_cancellation_reason_to_t_ticket
+ALTER TABLE T_TICKET ADD COLUMN IF NOT EXISTS CANCELLATION_REASON VARCHAR(254) NULL;
+
+--changeset sousseini:add_column_comment_to_t_ticket
+ALTER TABLE T_TICKET ADD COLUMN IF NOT EXISTS COMMENT VARCHAR(254) NULL;

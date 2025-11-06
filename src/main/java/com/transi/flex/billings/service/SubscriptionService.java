@@ -37,7 +37,6 @@ public class SubscriptionService {
         SubscriptionPlan plan = planRepository.findById(dto.getPlanId())
                 .orElseThrow(() -> new RuntimeException("Plan not found"));
 
-        // Vérifier si la compagnie a déjà un abonnement actif
         subscriptionRepository.findActiveSubscriptionByCompanyId(
                 dto.getCompanyId(),
                 LocalDate.now()
@@ -143,5 +142,19 @@ public class SubscriptionService {
                 subscriptionRepository.save(subscription);
             }
         }
+    }
+
+    public SubscriptionDTO updateAutoRenew(Long subscriptionId, Boolean autoRenew) {
+        Subscription subscription = subscriptionRepository.findById(subscriptionId)
+                .orElseThrow(() -> new RuntimeException("Subscription not found"));
+
+        if (!subscription.getActive()) {
+            throw new RuntimeException("Cannot update auto-renew for inactive subscription");
+        }
+
+        subscription.setAutoRenew(autoRenew);
+        Subscription saved = subscriptionRepository.save(subscription);
+
+        return mapper.toDto(saved);
     }
 }

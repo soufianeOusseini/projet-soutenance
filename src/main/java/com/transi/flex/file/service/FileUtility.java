@@ -1,5 +1,6 @@
 package com.transi.flex.file.service;
 
+import com.transi.flex.company.model.Company;
 import com.transi.flex.config.CompanyContextHolder;
 import com.transi.flex.file.dao.FileDAO;
 import com.transi.flex.file.enums.FileType;
@@ -35,13 +36,13 @@ public class FileUtility {
 
     private final FileDAO dao;
 
-    public Resource get(Long fileId) {
+    public Resource get(Long fileId, Company company) {
         try {
             Optional<AppFile> appFile = dao.findById(fileId);
             if (appFile.isEmpty()) {
                 return null;
             }
-            Path root = Paths.get(getBaseFilePath());
+            Path root = Paths.get(getBaseFilePath(company));
             Path file = root.resolve(appFile.get().getPath());
             Resource resource = new UrlResource(file.toUri());
 
@@ -55,11 +56,11 @@ public class FileUtility {
         }
     }
 
-    public String save(MultipartFile file, String fileName, FileType fileType) throws Exception {
+    public String save(MultipartFile file, String fileName, FileType fileType, Company company) throws Exception {
         validateParams(file, fileName, fileType);
         String path;
         try {
-            Path root = Paths.get(getBaseFilePath());
+            Path root = Paths.get(getBaseFilePath(company));
             if (fileName.equals(file.getOriginalFilename())) {
                 path = fileType.name() + File.separator + fileName;
             } else {
@@ -74,12 +75,12 @@ public class FileUtility {
         }
     }
 
-    public String save(MultipartFile file, String folder, String fileName, FileType fileType)
+    public String save(MultipartFile file, String folder, String fileName, FileType fileType,Company company)
             throws Exception {
         validateParams(file, fileName, fileType);
         String path;
         try {
-            Path root = Paths.get(getBaseFilePath());
+            Path root = Paths.get(getBaseFilePath(company));
             if (fileName.equals(file.getOriginalFilename())) {
                 path = fileType.name() + File.separator + folder + File.separator + fileName;
             } else {
@@ -94,11 +95,11 @@ public class FileUtility {
         }
     }
 
-    public String getBase64FromUrl(String url) {
+    public String getBase64FromUrl(String url,Company company) {
         if (StringUtils.isBlank(url)) {
             return null;
         }
-        Path root = Paths.get(getBaseFilePath(), url);
+        Path root = Paths.get(getBaseFilePath(company), url);
         try {
             return "data:image/png;base64,".concat(Base64.getEncoder()
                     .encodeToString(FileUtils.readFileToByteArray(root.toFile())));
@@ -108,9 +109,9 @@ public class FileUtility {
         return url;
     }
 
-    public String save(String base64, String fileName, FileType fileType) throws Exception {
+    public String save(String base64, String fileName, FileType fileType,Company company) throws Exception {
         try {
-            Path root = Paths.get(getBaseFilePath());
+            Path root = Paths.get(getBaseFilePath(company));
             String path = fileType.name() + File.separator + fileName + "."
                     + getFileExtensionFromBase64(base64);
             Path resolve = root.resolve(path);
@@ -123,9 +124,9 @@ public class FileUtility {
         }
     }
 
-    public void update(String base64, String path) throws Exception {
+    public void update(String base64, String path, Company company) throws Exception {
         try {
-            Path root = Paths.get(getBaseFilePath());
+            Path root = Paths.get(getBaseFilePath(company));
             Path resolve = root.resolve(path);
             String[] strings = base64.split(",");
             byte[] decodedBytes = Base64.getDecoder().decode(strings[1]);
@@ -157,8 +158,8 @@ public class FileUtility {
         }
     }
 
-    public void deleteFile(String fileUrl) {
-        File file = new File(Paths.get(getBaseFilePath()) + File.separator + fileUrl);
+    public void deleteFile(String fileUrl, Company company) {
+        File file = new File(Paths.get(getBaseFilePath(company)) + File.separator + fileUrl);
         if (file.delete()) {
             System.out.println("File deleted successfully");
         } else {
@@ -167,9 +168,9 @@ public class FileUtility {
 
     }
 
-    private String getBaseFilePath() {
+    private String getBaseFilePath(Company company) {
         return new StringBuilder().append(uploadPath).append(File.separator).append("upload")
-                .append(File.separator).append(CompanyContextHolder.getCurrentId())
+                .append(File.separator).append(company.getId())
                 .append(File.separator).toString();
     }
 
@@ -197,9 +198,9 @@ public class FileUtility {
                 .concat(Base64.getEncoder().encodeToString(baos.toByteArray()));
     }
 
-    public Resource getPath(String path) {
+    public Resource getPath(String path,Company company) {
         try {
-            Path root = Paths.get(getBaseFilePath());
+            Path root = Paths.get(getBaseFilePath(company));
             Path file = root.resolve(path);
             Resource resource = new UrlResource(file.toUri());
 
@@ -214,7 +215,7 @@ public class FileUtility {
     }
 
     @SneakyThrows
-    public String getPhoto(String logo) {
+    public String getPhoto(String logo, Company company) {
         if (logo == null) {
             return null;
         }
@@ -223,8 +224,9 @@ public class FileUtility {
             is = new FileInputStream(logo);
         } else {
             is = new FileInputStream(
-                    uploadPath + "/upload/" + CompanyContextHolder.getCurrentId() + "/" + logo);
+                    uploadPath + "/upload/" + company.getId() + "/" + logo);
         }
+
         return "data:image/png;jpg;base64,"
                 .concat(Base64.getEncoder().encodeToString(FileCopyUtils.copyToByteArray(is)));
     }

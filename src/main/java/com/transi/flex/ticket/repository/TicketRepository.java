@@ -51,4 +51,10 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
     @Query("SELECT SUM(t.prix) FROM Ticket t WHERE t.status = 'PAYE' " +
             "AND YEAR(t.date) = :year AND MONTH(t.date) = :month")
     Double sumSalesByYearAndMonth(@Param("year") int year, @Param("month") int month);
+
+    @Query("SELECT t.seatNumber FROM Ticket t WHERE t.trajet.id = :trajetId AND t.date = :date AND t.status != 'ANNULE'")
+    List<Integer> findOccupiedSeatNumbers(@Param("trajetId") Long trajetId, @Param("date") LocalDate date);
+
+    @Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END FROM Ticket t WHERE t.trajet.id = :trajetId AND t.date = :date AND t.seatNumber = :seatNumber AND t.status != 'ANNULE'")
+    boolean existsByTrajetIdAndDateAndSeatNumber(@Param("trajetId") Long trajetId, @Param("date") LocalDate date, @Param("seatNumber") Integer seatNumber);
 }

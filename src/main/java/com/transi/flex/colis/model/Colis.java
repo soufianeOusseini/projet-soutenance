@@ -75,6 +75,11 @@ public class Colis {
 
     @Column(name = "UPDATED_AT")
     private LocalDateTime updatedAt;
+
+    @JoinColumn(name = "CREATED_BY")
+    @ManyToOne
+    private User createdBy;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

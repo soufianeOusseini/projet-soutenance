@@ -6,6 +6,7 @@ import com.transi.flex.bus.enums.BusStatus;
 import com.transi.flex.bus.mapper.BusMapper;
 import com.transi.flex.bus.model.Bus;
 import com.transi.flex.bus.repository.BusRepository;
+import com.transi.flex.company.model.Company;
 import com.transi.flex.company.repository.CompanyRepository;
 import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.file.enums.FileType;
@@ -42,7 +43,7 @@ public class BusService {
         model.setAgency(agency);
         model.setStatus(BusStatus.ACTIVE);
         model.setSpaceAvailable(dto.getCapacity());
-        saveImage(image, model);
+        saveImage(image, model,agency.getCompany());
 
         boolean exists = (dto.getId() == null)
                 ? busRepository.existsByNumberAndAgencyId(dto.getNumber(), agency.getId())
@@ -76,13 +77,13 @@ public class BusService {
     }
 
     private void saveImage(Optional<MultipartFile> image,
-                          Bus bus) throws Exception {
+                           Bus bus, Company company) throws Exception {
         if (bus.getImage() !=null){
-            fileUtility.deleteFile(bus.getImage());
+            fileUtility.deleteFile(bus.getImage(),company);
         }
         if (image.isPresent()) {
             String logoFilePath = fileUtility.save(image.get(), image.get().getOriginalFilename(),
-                    FileType.BUS_IMAGE);
+                    FileType.BUS_IMAGE, company);
             bus.setImage(logoFilePath);
         }
 

@@ -40,7 +40,11 @@ public class TicketService {
 
     @Transactional
     public TicketDTO save(TicketDTO ticketDTO) {
-        UserDTO user = userService.getUserById(ticketDTO.getUserId());
+        UserDTO user = null;
+        if(ticketDTO.getUserId() !=null){
+            user = userService.getUserById(ticketDTO.getUserId());
+
+        }
 
         Trajet trajet = trajetRepository.findById(ticketDTO.getTrajetId()).orElse(null);
         if (trajet == null) {
@@ -55,20 +59,42 @@ public class TicketService {
             throw new IllegalStateException("Aucune place disponible pour ce trajet");
         }
 
+        if (ticketDTO.getSeatNumber() != null) {
+            // Vérifier si le siège est déjà occupé
+            boolean seatTaken = repository.existsByTrajetIdAndDateAndSeatNumber(
+                    ticketDTO.getTrajetId(),
+                    ticketDTO.getDate(),
+                    ticketDTO.getSeatNumber()
+            );
+
+            if (seatTaken) {
+                throw new IllegalStateException("Le siège n°" + ticketDTO.getSeatNumber() + " est déjà occupé");
+            }
+
+            // Vérifier que le numéro de siège ne dépasse pas la capacité du bus
+            int capaciteTotale = schedule.getBus().getCapacity(); // Assurez-vous que Bus a un champ capacite
+            if (ticketDTO.getSeatNumber() > capaciteTotale) {
+                throw new IllegalStateException("Le numéro de siège ne peut pas dépasser " + capaciteTotale);
+            }
+        } else {
+            // Attribuer automatiquement le prochain siège disponible
+            Integer nextSeatNumber = getNextAvailableSeatNumber(ticketDTO.getTrajetId(), ticketDTO.getDate(), schedule);
+            ticketDTO.setSeatNumber(nextSeatNumber);
+        }
+
+
         if (ticketDTO.getNumero() == null || ticketDTO.getNumero().isEmpty()) {
             ticketDTO.setNumero("TKT-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         }
 
-        // Remplir depuis la planification
         ticketDTO.setPrix(schedule.getPrix());
         ticketDTO.setHeureDepart(schedule.getHeureDepart());
         ticketDTO.setDate(schedule.getDateDepart());
 
         if (user != null) {
-            ticketDTO.setUser(user); // si ton mapper crée des entités transientes, pense à attacher côté service
+            ticketDTO.setUser(user);
         }
 
-        // Statut & deadline
         if ("RESERVATION".equals(ticketDTO.getTypeTransaction())) {
             ticketDTO.setStatus(TicketStatus.RESERVE);
 
@@ -142,7 +168,7 @@ public class TicketService {
     }
 
     @Transactional
-    public TicketDTO cancelTicket(Long id) {
+    public TicketDTO cancelTicket(Long id, String cancellationReason, String comment) {
         Ticket ticket = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Ticket non trouvé avec l'ID: " + id));
 
@@ -165,7 +191,11 @@ public class TicketService {
             }
         }
 
+        // Sauvegarder les informations d'annulation
         ticket.setStatus(TicketStatus.ANNULE);
+        ticket.setCancellation_reason(cancellationReason);
+        ticket.setComment(comment);
+
         Ticket updatedTicket = repository.save(ticket);
 
         return mapper.toDto(updatedTicket);
@@ -267,5 +297,28 @@ public class TicketService {
         } catch (Exception e) {
             throw new RuntimeException("Erreur lors de la récupération des tickets: " + e.getMessage());
         }
+    }
+
+    private Integer getNextAvailableSeatNumber(Long trajetId, LocalDate date, TripSchedule schedule) {
+        // Récupérer tous les numéros de sièges déjà occupés pour ce trajet et cette date
+        List<Integer> occupiedSeats = repository.findOccupiedSeatNumbers(trajetId, date);
+
+        int capaciteTotale = schedule.getBus().getCapacity(); // Assurez-vous que Bus a un champ capacite
+
+        // Trouver le premier siège disponible
+        for (int i = 1; i <= capaciteTotale; i++) {
+            if (!occupiedSeats.contains(i)) {
+                return i;
+            }
+        }
+
+        throw new IllegalStateException("Aucun siège disponible");
+    }
+
+    /**
+     * Récupère la liste des sièges occupés pour un trajet et une date donnés
+     */
+    public List<Integer> getOccupiedSeats(Long trajetId, LocalDate date) {
+        return repository.findOccupiedSeatNumbers(trajetId, date);
     }
 }

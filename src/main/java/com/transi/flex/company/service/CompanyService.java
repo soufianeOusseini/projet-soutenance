@@ -102,14 +102,20 @@ public class CompanyService {
         repository.save(company);
     }
 
+    public void updateLogo(Long id , Optional<MultipartFile> logoPath) throws Exception {
+        Company company = repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Company not found with id: " + id));
+        saveLogo(logoPath, company);
+    }
+
     private void saveLogo(Optional<MultipartFile> logoPath,
                                    Company company) throws Exception {
         if (company.getLogoPath() !=null){
-            fileUtility.deleteFile(company.getLogoPath());
+            fileUtility.deleteFile(company.getLogoPath(), company);
         }
         if (logoPath.isPresent()) {
             String logoFilePath = fileUtility.save(logoPath.get(), logoPath.get().getOriginalFilename(),
-                    FileType.COMPANY_LOGO);
+                    FileType.COMPANY_LOGO, company);
             company.setLogoPath(logoFilePath);
         }
 

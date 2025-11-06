@@ -1,6 +1,7 @@
 package com.transi.flex.file.service;
 
 
+import com.transi.flex.company.model.Company;
 import com.transi.flex.file.dao.FileDAO;
 import com.transi.flex.file.dto.FileDTO;
 import com.transi.flex.file.dto.FilePayload;
@@ -31,27 +32,27 @@ public class FileService {
 
     @Transactional
     @SneakyThrows
-    public void save(FilePayload dto, MultipartFile[] files) {
+    public void save(FilePayload dto, MultipartFile[] files, Company company) {
         if (ArrayUtils.isEmpty(files)) {
             return;
         }
         for (Integer i = 0; i < files.length; i++) {
             var payload = dto.toBuilder().build();
             payload.setName(String.valueOf(new Date().getTime()));
-            saveFile(payload, files[i]);
+            saveFile(payload, files[i], company);
         }
 
     }
 
     @Transactional
     @SneakyThrows
-    public void saveFile(FilePayload dto, MultipartFile file) {
+    public void saveFile(FilePayload dto, MultipartFile file, Company company) {
         AppFile appFile = mapper.toModel(dto);
         String path;
         if (StringUtils.isBlank(dto.getFolder())) {
-            path = fileUtility.save(file, dto.getName(), dto.getType());
+            path = fileUtility.save(file, dto.getName(), dto.getType(), company);
         } else {
-            path = fileUtility.save(file, dto.getFolder(), dto.getName(), dto.getType());
+            path = fileUtility.save(file, dto.getFolder(), dto.getName(), dto.getType(), company);
         }
         appFile.setPath(path);
         appFile.setDisplayName(file.getOriginalFilename());
@@ -61,9 +62,9 @@ public class FileService {
 
     @Transactional
     @SneakyThrows
-    public void save(FilePayload dto, String base64) {
+    public void save(FilePayload dto, String base64, Company company) {
         AppFile file = mapper.toModel(dto);
-        String path = fileUtility.save(base64, dto.getName(), dto.getType());
+        String path = fileUtility.save(base64, dto.getName(), dto.getType(), company);
         file.setPath(path);
         dao.save(file);
     }
@@ -79,7 +80,7 @@ public class FileService {
         dao.deleteAllById(fileId);
     }
 
-    public void addFiles(MultipartFile[] documents) {
+    public void addFiles(MultipartFile[] documents, Company company) {
         if (ArrayUtils.isEmpty(documents)) {
             return;
         }
@@ -88,13 +89,13 @@ public class FileService {
                 .folder(String.valueOf(new Date().getTime())).build();
         for (Integer i = 0; i < documents.length; i++) {
             payload.setName(String.valueOf(new Date().getTime()));
-            saveFile(payload, documents[i]);
+            saveFile(payload, documents[i], company);
         }
     }
 
-    public void delete(List<FileDTO> dtoList) {
+    public void delete(List<FileDTO> dtoList, Company company) {
         dtoList.forEach(dto -> {
-            fileUtility.deleteFile(dto.getPath());
+            fileUtility.deleteFile(dto.getPath(), company);
         });
         dao.deleteAllById(dtoList.stream().map(f -> f.getId()).collect(Collectors.toList()));
     }

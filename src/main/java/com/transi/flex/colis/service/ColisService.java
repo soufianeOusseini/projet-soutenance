@@ -10,6 +10,7 @@ import com.transi.flex.colis.model.Colis;
 import com.transi.flex.colis.repository.ColisRepository;
 import com.transi.flex.company.repository.CompanyRepository;
 import com.transi.flex.config.AgencyContextHolder;
+import com.transi.flex.pdf.PdfTicketService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
@@ -27,7 +28,7 @@ public class ColisService {
 
     private final ColisRepository repository;
     private final ColisMapper mapper;
-    private final CompanyRepository companyRepository;
+    private final PdfTicketService pdfTicketService;
     private final AgencyRepository agencyRepository;
     private final UserService userService;
 
@@ -44,7 +45,8 @@ public class ColisService {
         if(dto.getNumero() == null){
             dto.setNumero(generateUniqueNumber());
         }
-
+        UserDTO createdBY = userService.getCurrentUser();
+        dto.setCreatedBy(createdBY);
         Colis colis = mapper.toModel(dto);
         if(AgencyContextHolder.getCurrentAgencyId() !=null){
             Agency agency = agencyRepository.findById(AgencyContextHolder.getCurrentAgencyId())
@@ -174,5 +176,12 @@ public class ColisService {
 
     public List<ColisDTO> getUserColis(){
         return mapper.toDtos(repository.findByUserId(userService.getCurrentUser().getId()));
+    }
+
+    public byte[] generateColisPdf(Long colisId) {
+        Colis colis = repository.findById(colisId)
+                .orElseThrow(() -> new EntityNotFoundException("Colis non trouvé avec l'ID: " + colisId));
+
+        return pdfTicketService.generateColisPdf(colis);
     }
 }

@@ -54,4 +54,12 @@ public class SubscriptionController {
         subscriptionService.processExpiredSubscriptions();
         return ResponseEntity.ok().build();
     }
+
+    @PatchMapping("/{id}/auto-renew")
+    public ResponseEntity<SubscriptionDTO> updateAutoRenew(
+            @PathVariable Long id,
+            @RequestBody Boolean autoRenew
+    ) {
+        return ResponseEntity.ok(subscriptionService.updateAutoRenew(id, autoRenew));
+    }
 }

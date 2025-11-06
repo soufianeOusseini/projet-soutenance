@@ -1,80 +1,211 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
 <head>
     <meta charset="UTF-8"/>
-    <title>Ticket de Transport</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 10px; }
-        .ticket { max-width: 400px; margin: auto; border: 2px solid #2c3e50; border-radius: 10px; }
-        .header { background: #3498db; color: white; padding: 15px; text-align: center; border-radius: 8px 8px 0 0; }
-        .company { font-weight: bold; font-size: 18px; }
-        .title { font-size: 20px; margin-top: 5px; }
-        .number { font-size: 12px; margin-top: 5px; background: rgba(255,255,255,0.2); padding: 3px 6px; display: inline-block; border-radius: 10px; }
-        .body { padding: 15px; background: #f8f9fa; }
-        .section { margin-bottom: 15px; }
-        .section-title { font-weight: bold; margin-bottom: 5px; }
-        .info { display: flex; justify-content: space-between; }
-        .status { font-weight: bold; padding: 3px 10px; border-radius: 12px; color: white; text-transform: uppercase; }
-        .status-paye { background: #27ae60; }
-        .status-reserve { background: #f39c12; }
-        .status-annule { background: #e74c3c; }
-        .barcode { text-align: center; font-family: monospace; margin-top: 15px; padding: 10px; border: 2px dashed #bdc3c7; border-radius: 5px; }
-        .footer { text-align: center; font-size: 10px; padding: 5px; margin-top: 10px; color: #7f8c8d; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #fff;
+            color: #222;
+            font-size: 13px;
+        }
+
+        .ticket {
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #004d99;
+            padding: 10px 20px;
+        }
+
+        .logo img {
+            height: 55px;
+            width: auto;
+        }
+
+        .seat-number {
+            font-weight: bold;
+            font-size: 15px;
+            color: #222;
+            text-align: right;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .section {
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 13px;
+            color: #004d99;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 3px;
+        }
+
+        .info-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .info-table td {
+            padding: 3px 0;
+            vertical-align: top;
+        }
+
+        .label {
+            font-weight: 600;
+            width: 130px;
+            color: #333;
+        }
+
+        .value {
+            color: #222;
+        }
+
+        .divider {
+            border-top: 1px dashed #bbb;
+            margin: 10px 0;
+        }
+
+        .qr-section {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .qr-box {
+            border: 1px solid #444;
+            width: 90px;
+            height: 90px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .ticket-number {
+            text-align: center;
+            font-weight: bold;
+            font-size: 12px;
+            margin-top: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 10px 20px;
+            font-size: 11px;
+            color: #555;
+            border-top: 1px solid #ccc;
+            background-color: #f7f7f7;
+        }
+
+        .footer span {
+            display: inline-block;
+            margin: 2px 5px;
+        }
     </style>
 </head>
 <body>
 <div class="ticket">
+
+    <!-- HEADER -->
     <div class="header">
-        <div class="company" th:text="${ticket.company.name}">TRANSPORT COMPANY</div>
-        <div class="title">TICKET DE TRANSPORT</div>
-        <div class="number" th:text="'N° ' + ${ticket.numero}">N° TKT-12345678</div>
-    </div>
-    <div class="body">
-        <div class="section">
-            <div class="section-title">Voyage</div>
-            <div class="info"><span>De:</span> <span th:text="${ticket.trajet.villeDepart}">Lomé</span></div>
-            <div class="info"><span>À:</span> <span th:text="${ticket.trajet.villeArrive}">Kara</span></div>
-            <div class="info"><span>Date:</span> <span th:text="${ticket.date}">15/03/2024</span></div>
-            <div class="info"><span>Heure:</span> <span th:text="${ticket.heureDepart}">08:30</span></div>
-            <div class="info"><span>Prix:</span> <span th:text="${ticket.prix} + ' XOF'">5000 XOF</span></div>
+        <div class="logo">
+            <img th:src="${logo}" alt="Logo"/>
         </div>
-
-        <div class="section">
-            <div class="section-title">Client</div>
-            <div class="info"><span>Nom:</span> <span th:text="${ticket.clientNom}">John DOE</span></div>
-            <div class="info"><span>Contact:</span> <span th:text="${ticket.clientContact}">+228 90 12 34 56</span></div>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Paiement</div>
-            <div class="info"><span>Mode:</span> <span th:text="${ticket.modePaiement}">ESPECES</span></div>
-            <div class="info"><span>Statut:</span>
-                <span class="status-badge"
-                      th:classappend="${ticket.status?.name() == 'PAYE' ? 'status-paye'
-                                        : (ticket.status?.name() == 'RESERVE' ? 'status-reserve'
-                                        : 'status-annule')}"
-                      th:text="${ticket.status?.name() == 'PAYE' ? 'PAYÉ'
-                                  : (ticket.status?.name() == 'RESERVE' ? 'RÉSERVÉ'
-                                  : (ticket.status?.name() == 'ANNULE' ? 'ANNULÉ'
-                                  : ticket.status?.name()))}">
-                        PAYÉ
-                    </span>
-            </div>
-            <div class="info" th:if="${ticket.typeTransaction == 'RESERVATION' && ticket.dateLimitePaiement != null}">
-                <span>Limite paiement:</span>
-                <span th:text="${ticket.dateLimitePaiement}">16/03/2024</span>
-            </div>
-        </div>
-
-        <div class="barcode">
-            <div th:text="${ticket.numero}">TKT-12345678</div>
+        <div class="seat-number">
+            Siège N° <span th:text="${ticket.seatNumber}"></span>
         </div>
     </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+        <!-- Informations Client -->
+        <div class="section">
+            <div class="section-title">Informations Client</div>
+            <table class="info-table">
+                <tr>
+                    <td class="label">Nom :</td>
+                    <td class="value" th:text="${ticket.user != null ? ticket.user.lastName : ticket.clientNom}"></td>
+                </tr>
+                <tr>
+                    <td class="label">Prénom :</td>
+                    <td class="value" th:text="${ticket.user != null ? ticket.user.firstName : ticket.clientPrenom}"></td>
+                </tr>
+                <tr>
+                    <td class="label">Téléphone :</td>
+                    <td class="value" th:text="${ticket.user != null ? ticket.user.phone : ticket.clientContact}"></td>
+                </tr>
+                <tr>
+                    <td class="label">Trajet :</td>
+                    <td class="value" th:text="${ticket.trajet != null ? ticket.trajet.nom : ''}"></td>
+                </tr>
+                <tr>
+                    <td class="label">Date et Heure :</td>
+                    <td class="value">
+                        <span th:text="${#temporals.format(ticket.date, 'dd/MM/yyyy')}"></span>
+                        à
+                        <span th:text="${#temporals.format(ticket.heureDepart, 'HH:mm') + ' h'}"></span>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Informations Paiement -->
+        <div class="section">
+            <div class="section-title">Informations Paiement</div>
+            <table class="info-table">
+                <tr>
+                    <td class="label">Montant :</td>
+                    <td class="value" th:text="${ticket.prix + ' F CFA'}"></td>
+                </tr>
+                <tr>
+                    <td class="label">Mode de paiement :</td>
+                    <td class="value" th:text="${ticket.modePaiement}"></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- QR Code -->
+        <div class="qr-section">
+            <div class="qr-box">
+                <img th:if="${qrCodeBase64 != null}"
+                     th:src="'data:image/png;base64,' + ${qrCodeBase64}"
+                     alt="QR Code" style="width:80px;height:80px;"/>
+                <span th:if="${qrCodeBase64 == null}">QR</span>
+            </div>
+            <div class="ticket-number">
+                N° <span th:text="${ticket.numero}"></span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FOOTER -->
     <div class="footer">
-        Merci pour votre voyage !<br/>
-        Conservez ce ticket jusqu'à destination.<br/>
-        Émis le <span th:text="${#dates.format(#dates.createNow(),'dd/MM/yyyy HH:mm')}">15/03/2024 10:30</span>
+        <span th:text="${ticket.agency.company.name + ' - ' + ticket.agency.name + ' - ' + ticket.agency.region}"></span><br/>
+        <span th:text="${'Tel : ' + ticket.agency.telephone}"></span> |
+        <span th:text="${'Email : ' + ticket.agency.email}"></span>
     </div>
+
 </div>
 </body>
 </html>

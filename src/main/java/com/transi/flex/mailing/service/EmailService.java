@@ -1,4 +1,3 @@
-// EmailService
 package com.transi.flex.mailing.service;
 
 import java.io.File;
@@ -7,6 +6,9 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.concurrent.CompletableFuture;
 
+import com.transi.flex.billings.dao.SubscriptionDAO;
+import com.transi.flex.billings.dto.SubscriptionDTO;
+import com.transi.flex.billings.model.Subscription;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -150,5 +152,36 @@ public class EmailService {
         for (File file : files) {
             helper.addAttachment(file.getName(), file);
         }
+    }
+
+    @SneakyThrows
+    public void sendExpirationNotification(Context context, String template, EmailRequest emailRequest,SubscriptionDTO subscription){
+        context.setVariable("appUrl", appUrl);
+
+        if (!context.containsVariable("hasLogo")) {
+            prepareCompanyContext(context);
+        }
+
+        CompletableFuture.runAsync(() -> {
+            Thread t = Thread.currentThread();
+            ClassLoader orig = t.getContextClassLoader();
+            t.setContextClassLoader(InternetAddress.class.getClassLoader());
+            try {
+                MimeMessage message = javaMailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(message, true);
+                helper.setFrom(new InternetAddress(emailRequest.getFrom(), emailRequest.getSenderName()));
+                helper.setTo(emailRequest.getTo());
+                helper.setSubject(emailRequest.getSubject());
+                String htmlContent = parseTemplateToHTML(template , context);
+                helper.setText(htmlContent, true);
+                addAttachments(helper, emailRequest.getFiles());
+                javaMailSender.send(message);
+                log.info("email sent to {}", Arrays.asList(emailRequest.getTo()));
+            } catch (Exception e) {
+                log.error("fail to send email to {}", Arrays.asList(emailRequest.getTo()), e);
+            } finally {
+                t.setContextClassLoader(orig);
+            }
+        });
     }
 }

@@ -1,6 +1,7 @@
 package com.transi.flex.colis.dto;
 
 import com.transi.flex.account.dto.UserDTO;
+import com.transi.flex.account.model.User;
 import com.transi.flex.agency.dto.AgencyDTO;
 import com.transi.flex.colis.enums.ColisStatus;
 import com.transi.flex.colis.model.ColisItems;
@@ -48,4 +49,5 @@ public class ColisDTO {
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private UserDTO createdBy;
 }

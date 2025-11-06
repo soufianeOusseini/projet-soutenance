@@ -93,23 +93,23 @@ public class ReservationService {
     }
 
 
-    @Transactional
-    public ReservationDTO cancelReservation(Long id) {
-        Reservation reservation = reservationRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Réservation non trouvée avec l'ID: " + id));
-
-        if (reservation.getStatus() == ReservationStatus.TERMINEE) {
-            throw new IllegalStateException("Impossible d'annuler une réservation déjà terminée");
-        }
-
-        reservation.setStatus(ReservationStatus.ANNULEE);
-
-        if (reservation.getTicket() != null) {
-            ticketService.cancelTicket(reservation.getTicket().getId());
-        }
-
-        Reservation updatedReservation = reservationRepository.save(reservation);
-        return reservationMapper.toDto(updatedReservation);
-    }
+//    @Transactional
+//    public ReservationDTO cancelReservation(Long id) {
+//        Reservation reservation = reservationRepository.findById(id)
+//                .orElseThrow(() -> new EntityNotFoundException("Réservation non trouvée avec l'ID: " + id));
+//
+//        if (reservation.getStatus() == ReservationStatus.TERMINEE) {
+//            throw new IllegalStateException("Impossible d'annuler une réservation déjà terminée");
+//        }
+//
+//        reservation.setStatus(ReservationStatus.ANNULEE);
+//
+//        if (reservation.getTicket() != null) {
+//            ticketService.cancelTicket(reservation.getTicket().getId());
+//        }
+//
+//        Reservation updatedReservation = reservationRepository.save(reservation);
+//        return reservationMapper.toDto(updatedReservation);
+//    }
 
 }

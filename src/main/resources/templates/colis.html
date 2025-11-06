@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="fr">
+<head>
+    <meta charset="UTF-8"/>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #fff;
+            color: #222;
+            font-size: 13px;
+        }
+
+        .receipt {
+            border: 1px solid #004d99;
+            border-radius: 8px;
+            width: 650px;
+            margin: 20px auto;
+            background-color: #fff;
+        }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #004d99;
+            padding: 15px 25px;
+        }
+
+        .logo img {
+            height: 60px;
+            width: auto;
+        }
+
+        .title {
+            flex: 1;
+            text-align: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: #004d99;
+        }
+
+        .header-info {
+            text-align: right;
+            font-size: 13px;
+            color: #004d99;
+            line-height: 1.4;
+        }
+
+        .content {
+            padding: 25px;
+        }
+
+        .section {
+            margin-bottom: 18px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 14px;
+            color: #004d99;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #004d99;
+            padding-bottom: 3px;
+        }
+
+        .info-row {
+            display: flex;
+            padding: 4px 0;
+        }
+
+        .label {
+            font-weight: 600;
+            width: 180px;
+            color: #333;
+        }
+
+        .value {
+            color: #222;
+            flex: 1;
+        }
+
+        .divider {
+            border-top: 1px dashed #004d99;
+            margin: 15px 0;
+        }
+
+        /* TABLE */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .items-table thead {
+            background-color: #004d99;
+            color: white;
+        }
+
+        .items-table th {
+            padding: 8px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .items-table td {
+            padding: 8px;
+            font-size: 12px;
+        }
+
+        .items-table tbody tr {
+            border-bottom: 1px solid #ddd;
+        }
+
+        .items-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .items-table tfoot {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .items-table tfoot td {
+            padding: 10px 8px;
+            border-top: 2px solid #004d99;
+        }
+
+        .bottom-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 20px 25px 10px 25px;
+        }
+
+        .qr-box {
+            border: 1px solid #004d99;
+            width: 90px;
+            height: 90px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 4px;
+            background-color: #fff;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 10px 20px 20px 20px;
+            font-size: 11px;
+            color: #555;
+        }
+
+        .footer span {
+            display: inline-block;
+            margin: 2px 8px;
+        }
+
+    </style>
+</head>
+<body>
+<div class="receipt">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="logo">
+            <img th:src="${logo}" alt="Logo"/>
+        </div>
+
+        <div class="title">
+            REÇU DE COLIS
+        </div>
+
+        <div class="header-info">
+            <div><strong>N°</strong> <span th:text="${colis.numero}"></span></div>
+            <div th:text="${#temporals.format(colis.createdAt, 'dd/MM/yyyy')}"></div>
+        </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="content">
+
+        <!-- Informations du colis -->
+        <div class="section">
+            <div class="section-title">Informations du Colis</div>
+            <div class="info-row">
+                <div class="label">Heure d'envoi :</div>
+                <div class="value" th:text="${colis.heureEnvoi != null ? #temporals.format(colis.heureEnvoi, 'HH:mm') + ' h' : 'N/A'}"></div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Expéditeur et Destinataire -->
+        <div class="section">
+            <span class="section-title">Expéditeur et Destinataire</span>
+            <div class="info-row">
+                <span class="label">Expéditeur :</span>
+                <span class="value" style="font-weight: 600;" th:text="${colis.expediteur + ' - ' + colis.lieuEnvoi}"></span>
+            </div>
+            <div class="info-row">
+                <span class="label">Destinataire :</span>
+                <span class="value" style="font-weight: 600;" th:text="${colis.destinateur + ' - ' + colis.lieuReception}"></span>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- Articles du Colis -->
+        <div class="section">
+            <div class="section-title">Détails des Articles</div>
+            <table class="items-table">
+                <thead>
+                <tr>
+                    <th>N°</th>
+                    <th>Nature</th>
+                    <th>Description</th>
+                    <th style="text-align: center;">Nombre</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item, iterStat : ${colis.colisItems}">
+                    <td th:text="${iterStat.count}"></td>
+                    <td th:text="${item.nature}"></td>
+                    <td th:text="${item.description}"></td>
+                    <td style="text-align: center;" th:text="${item.nombre}"></td>
+                </tr>
+                </tbody>
+                <tfoot>
+                <tr>
+                    <td colspan="3" style="text-align: right;">MONTANT TOTAL :</td>
+                    <td style="text-align: center; color: #004d99; font-size: 16px;" th:text="${colis.prix + ' F CFA'}"></td>
+                </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- QR CODE + FOOTER -->
+    <div class="bottom-section">
+        <div></div> <!-- espace gauche -->
+        <div class="qr-box">
+            <img th:if="${qrCodeBase64 != null}"
+                 th:src="'data:image/png;base64,' + ${qrCodeBase64}"
+                 alt="QR Code" style="width:80px;height:80px;"/>
+            <span th:if="${qrCodeBase64 == null}">QR</span>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        <span th:text="${colis.agency.company.name + ' - ' + colis.agency.name + ' - ' + colis.agency.region}"></span><br/>
+        <span th:text="${'Tel : ' + colis.agency.telephone}"></span> |
+        <span th:text="${'Email : ' + colis.agency.email}"></span>
+    </div>
+
+</div>
+</body>
+</html>

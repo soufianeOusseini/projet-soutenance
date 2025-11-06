@@ -82,6 +82,15 @@ public class Ticket {
     @Column(name = "DATE_LIMITE_PAIEMENT")
     private LocalDateTime dateLimitePaiement;
 
+    @Column(name = "SEAT_NUMBER")
+    private Integer seatNumber;
+
+    @Column(name = "CANCELLATION_REASON")
+    private String cancellation_reason;
+
+    @Column(name = "COMMENT")
+    private String comment;
+
     public boolean isReservationExpired() {
         return "RESERVATION".equals(typeTransaction)
                 && dateLimitePaiement != null
