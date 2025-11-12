@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -34,9 +35,28 @@ public class DriverService {
     private final AgencyRepository agencyRepository;
 
 
-    public List<DriverDTO> getAll(){
-        return mapper.toDtos(repository.findByAgencyId(AgencyContextHolder.getCurrentAgencyId()));
+    public List<DriverDTO> getAll() {
+        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+
+        if (agencyId != null) {
+            // Utilisateur d'agence
+            return mapper.toDtos(repository.findByAgencyId(agencyId));
+        } else {
+            // Admin compagnie
+            Long companyId = CompanyContextHolder.getCurrentId();
+            List<Long> agencyIds = agencyRepository.findByCompanyId(companyId)
+                    .stream()
+                    .map(Agency::getId)
+                    .collect(Collectors.toList());
+
+            List<Driver> drivers = agencyIds.stream()
+                    .flatMap(id -> repository.findByAgencyId(id).stream())
+                    .collect(Collectors.toList());
+
+            return mapper.toDtos(drivers);
+        }
     }
+
 
     public DriverDTO save(DriverDTO dto){
         Agency agency = agencyRepository.findById(AgencyContextHolder.getCurrentAgencyId())

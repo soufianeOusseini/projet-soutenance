@@ -6,6 +6,7 @@ import com.transi.flex.colis.enums.ColisStatus;
 import com.transi.flex.colis.repository.ColisRepository;
 import com.transi.flex.company.repository.CompanyRepository;
 import com.transi.flex.config.AgencyContextHolder;
+import com.transi.flex.config.CompanyContextHolder;
 import com.transi.flex.dashboard.dto.DashboardDTO;
 import com.transi.flex.dashboard.dto.SuperDashboardStatsDTO;
 import com.transi.flex.ticket.enums.TicketStatus;
@@ -35,17 +36,27 @@ public class DashboardService {
     private final CompanyRepository companyRepository;
 
     public DashboardDTO getDashboardData() {
+        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+        boolean isCompanyLevel = (agencyId == null);
+
         return DashboardDTO.builder()
-                .statistiquesGenerales(getStatistiquesGenerales())
-                .revenus(getRevenus())
-                .colisStatistics(getColisStatistics())
-                .trajetRepartition(getTrajetRepartition())
-                .activitesRecentes(getActivitesRecentes())
+                .isCompanyLevel(isCompanyLevel)
+                .statistiquesGenerales(getStatistiquesGenerales(agencyId, isCompanyLevel))
+                .revenus(getRevenus(agencyId, isCompanyLevel))
+                .colisStatistics(getColisStatistics(agencyId, isCompanyLevel))
+                .trajetRepartition(getTrajetRepartition(agencyId, isCompanyLevel))
+                .activitesRecentes(getActivitesRecentes(agencyId, isCompanyLevel))
                 .build();
     }
 
-    private DashboardDTO.StatistiquesGeneralesDTO getStatistiquesGenerales() {
-        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+    private DashboardDTO.StatistiquesGeneralesDTO getStatistiquesGenerales(Long agencyId, boolean isCompanyLevel) {
+        if (isCompanyLevel) {
+            return getCompanyStatistiques();
+        }
+        return getAgencyStatistiques(agencyId);
+    }
+
+    private DashboardDTO.StatistiquesGeneralesDTO getAgencyStatistiques(Long agencyId) {
         long totalTrips = trajetRepository.countByAgencyId(agencyId);
         long totalColis = colisRepository.countByAgencyId(agencyId);
 
@@ -98,13 +109,146 @@ public class DashboardService {
                 .percentageReservationsChange(12.3)
                 .totalColis(totalColis)
                 .percentageColisChange(12.5)
+                .totalAgencies(null) // Pas applicable pour une agence
                 .build();
     }
 
-    private DashboardDTO.RevenusDTO getRevenus() {
-        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+    private DashboardDTO.StatistiquesGeneralesDTO getCompanyStatistiques() {
+        Long companyId = CompanyContextHolder.getCurrentId();
+
+        // Récupérer toutes les agences de la compagnie
+        List<Long> agencyIds = agencyRepository.findByCompanyId(companyId).stream()
+                .map(agency -> agency.getId())
+                .collect(Collectors.toList());
+
+        // Statistiques agrégées de toutes les agences
+        long totalTrips = agencyIds.stream()
+                .mapToLong(id -> trajetRepository.countByAgencyId(id))
+                .sum();
+
+        long totalColis = agencyIds.stream()
+                .mapToLong(id -> colisRepository.countByAgencyId(id))
+                .sum();
+
+        long totalTickets = agencyIds.stream()
+                .mapToLong(id -> ticketRepository.findByAgencyId(id).stream()
+                        .filter(ticket -> ticket.getStatus() == TicketStatus.PAYE)
+                        .count())
+                .sum();
+
+        long totalReservations = agencyIds.stream()
+                .mapToLong(id -> ticketRepository.findByAgencyId(id).stream()
+                        .filter(ticket -> ticket.getStatus() == TicketStatus.RESERVE)
+                        .count())
+                .sum();
+
+        long totalPassengers = totalTickets + totalReservations;
+
+        double totalEarnings = agencyIds.stream()
+                .mapToDouble(id -> ticketRepository.findByAgencyId(id).stream()
+                        .filter(ticket -> ticket.getStatus() == TicketStatus.PAYE)
+                        .mapToDouble(ticket -> ticket.getPrix() != null ? ticket.getPrix() : 0)
+                        .sum())
+                .sum();
+
+        // Calcul du pourcentage de changement (à améliorer avec vraies données)
+        LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1).withHour(0).withMinute(0);
+
+        long ticketsThisMonth = agencyIds.stream()
+                .mapToLong(id -> ticketRepository.findByAgencyId(id).stream()
+                        .filter(ticket -> ticket.getStatus() == TicketStatus.PAYE
+                                && ticket.getDate() != null
+                                && (ticket.getDate().getYear() > startOfMonth.getYear()
+                                || (ticket.getDate().getYear() == startOfMonth.getYear()
+                                && ticket.getDate().getMonthValue() >= startOfMonth.getMonthValue())))
+                        .count())
+                .sum();
+
+        long ticketsLastMonth = agencyIds.stream()
+                .mapToLong(id -> ticketRepository.findByAgencyId(id).stream()
+                        .filter(ticket -> ticket.getStatus() == TicketStatus.PAYE
+                                && ticket.getDate() != null
+                                && ticket.getDate().getYear() == startOfMonth.minusMonths(1).getYear()
+                                && ticket.getDate().getMonthValue() == startOfMonth.minusMonths(1).getMonthValue())
+                        .count())
+                .sum();
+
+        double ticketsPercentage = ticketsLastMonth > 0
+                ? ((ticketsThisMonth - ticketsLastMonth) / (double) ticketsLastMonth) * 100
+                : 0;
+
+        return DashboardDTO.StatistiquesGeneralesDTO.builder()
+                .totalTrips(totalTrips)
+                .percentageTripsChange(ticketsPercentage)
+                .totalPassengers(totalPassengers)
+                .percentagePassengersChange(15.0)
+                .totalEarnings(totalEarnings)
+                .percentageEarningsChange(-18.0)
+                .totalTickets(totalTickets)
+                .percentageTicketsChange(8.5)
+                .totalReservations(totalReservations)
+                .percentageReservationsChange(12.3)
+                .totalColis(totalColis)
+                .percentageColisChange(12.5)
+                .totalAgencies((long) agencyIds.size()) // Nombre d'agences de la compagnie
+                .build();
+    }
+
+    private DashboardDTO.RevenusDTO getRevenus(Long agencyId, boolean isCompanyLevel) {
         LocalDate today = LocalDate.now();
 
+        if (isCompanyLevel) {
+            Long companyId = CompanyContextHolder.getCurrentId();
+            List<Long> agencyIds = agencyRepository.findByCompanyId(companyId).stream()
+                    .map(agency -> agency.getId())
+                    .collect(Collectors.toList());
+
+            double revenusToday = agencyIds.stream()
+                    .mapToDouble(id -> ticketRepository.findByAgencyId(id).stream()
+                            .filter(t -> t.getStatus() == TicketStatus.PAYE
+                                    && t.getDate() != null
+                                    && t.getDate().equals(today))
+                            .mapToDouble(t -> t.getPrix() != null ? t.getPrix() : 0)
+                            .sum())
+                    .sum();
+
+            double revenusThisMonth = agencyIds.stream()
+                    .mapToDouble(id -> ticketRepository.findByAgencyId(id).stream()
+                            .filter(t -> t.getStatus() == TicketStatus.PAYE
+                                    && t.getDate() != null
+                                    && t.getDate().getYear() == today.getYear()
+                                    && t.getDate().getMonthValue() == today.getMonthValue())
+                            .mapToDouble(t -> t.getPrix() != null ? t.getPrix() : 0)
+                            .sum())
+                    .sum();
+
+            List<DashboardDTO.RevenueByDayDTO> revenuesByDay = new ArrayList<>();
+            for (int i = 6; i >= 0; i--) {
+                LocalDate date = today.minusDays(i);
+                final LocalDate checkDate = date;
+                double amount = agencyIds.stream()
+                        .mapToDouble(id -> ticketRepository.findByAgencyId(id).stream()
+                                .filter(t -> t.getStatus() == TicketStatus.PAYE
+                                        && t.getDate() != null
+                                        && t.getDate().equals(checkDate))
+                                .mapToDouble(t -> t.getPrix() != null ? t.getPrix() : 0)
+                                .sum())
+                        .sum();
+                revenuesByDay.add(DashboardDTO.RevenueByDayDTO.builder()
+                        .day(date.getDayOfWeek().toString().substring(0, 1))
+                        .amount(amount)
+                        .build());
+            }
+
+            return DashboardDTO.RevenusDTO.builder()
+                    .revenusToday(revenusToday)
+                    .revenusThisMonth(revenusThisMonth)
+                    .percentageMonthChange(21.68)
+                    .revenuesByDay(revenuesByDay)
+                    .build();
+        }
+
+        // Code existant pour une agence spécifique
         double revenusToday = ticketRepository.findByAgencyId(agencyId).stream()
                 .filter(t -> t.getStatus() == TicketStatus.PAYE
                         && t.getDate() != null
@@ -144,8 +288,41 @@ public class DashboardService {
                 .build();
     }
 
-    private DashboardDTO.ColisStatisticsDTO getColisStatistics() {
-        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+    private DashboardDTO.ColisStatisticsDTO getColisStatistics(Long agencyId, boolean isCompanyLevel) {
+        if (isCompanyLevel) {
+            Long companyId = CompanyContextHolder.getCurrentId();
+            List<Long> agencyIds = agencyRepository.findByCompanyId(companyId).stream()
+                    .map(agency -> agency.getId())
+                    .collect(Collectors.toList());
+
+            long totalColis = agencyIds.stream()
+                    .mapToLong(id -> colisRepository.countByAgencyId(id))
+                    .sum();
+
+            long colisDelivered = agencyIds.stream()
+                    .mapToLong(id -> colisRepository.countByStatusAndAgencyId(ColisStatus.LIVRE, id))
+                    .sum();
+
+            long colisPending = agencyIds.stream()
+                    .mapToLong(id -> colisRepository.countByStatusAndAgencyId(ColisStatus.EN_ATTENTE, id))
+                    .sum();
+
+            long colisInTransit = agencyIds.stream()
+                    .mapToLong(id -> colisRepository.countByStatusAndAgencyId(ColisStatus.EN_TRANSIT, id))
+                    .sum();
+
+            double deliveryRate = totalColis > 0 ? (colisDelivered / (double) totalColis) * 100 : 0;
+
+            return DashboardDTO.ColisStatisticsDTO.builder()
+                    .totalColis(totalColis)
+                    .colisDelivered(colisDelivered)
+                    .colisPending(colisPending)
+                    .colisInTransit(colisInTransit)
+                    .percentageDelivered(deliveryRate)
+                    .deliveryRate(deliveryRate)
+                    .build();
+        }
+
         long totalColis = colisRepository.countByAgencyId(agencyId);
         long colisDelivered = colisRepository.countByStatusAndAgencyId(ColisStatus.LIVRE, agencyId);
         long colisPending = colisRepository.countByStatusAndAgencyId(ColisStatus.EN_ATTENTE, agencyId);
@@ -163,11 +340,32 @@ public class DashboardService {
                 .build();
     }
 
-    private List<DashboardDTO.TrajetRepartitionDTO> getTrajetRepartition() {
-        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+    private List<DashboardDTO.TrajetRepartitionDTO> getTrajetRepartition(Long agencyId, boolean isCompanyLevel) {
+        if (isCompanyLevel) {
+            Long companyId = CompanyContextHolder.getCurrentId();
+            List<Long> agencyIds = agencyRepository.findByCompanyId(companyId).stream()
+                    .map(agency -> agency.getId())
+                    .collect(Collectors.toList());
+
+            return agencyIds.stream()
+                    .flatMap(id -> trajetRepository.findByAgencyId(id).stream())
+                    .collect(Collectors.groupingBy(
+                            trajet -> trajet.getVilleDepart() + " → " + trajet.getVilleArrive(),
+                            Collectors.counting()
+                    ))
+                    .entrySet().stream()
+                    .sorted((a, b) -> b.getValue().compareTo(a.getValue()))
+                    .limit(4)
+                    .map(entry -> DashboardDTO.TrajetRepartitionDTO.builder()
+                            .route(entry.getKey())
+                            .count(entry.getValue())
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
         return trajetRepository.findByAgencyId(agencyId).stream()
                 .collect(Collectors.groupingBy(
-                        trajet -> trajet.getVilleDepart() + " ? " + trajet.getVilleArrive(),
+                        trajet -> trajet.getVilleDepart() + " → " + trajet.getVilleArrive(),
                         Collectors.counting()
                 ))
                 .entrySet().stream()
@@ -180,27 +378,47 @@ public class DashboardService {
                 .collect(Collectors.toList());
     }
 
-    private List<DashboardDTO.ActiviteRecenteDTO> getActivitesRecentes() {
-        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+    private List<DashboardDTO.ActiviteRecenteDTO> getActivitesRecentes(Long agencyId, boolean isCompanyLevel) {
         List<DashboardDTO.ActiviteRecenteDTO> activites = new ArrayList<>();
 
-        ticketRepository.findByAgencyId(agencyId).stream()
-                .filter(ticket -> ticket.getStatus() == TicketStatus.PAYE)
-                .sorted((a, b) -> {
-                    LocalDateTime dateA = a.getDate() != null ? a.getDate().atStartOfDay() : LocalDateTime.MIN;
-                    LocalDateTime dateB = b.getDate() != null ? b.getDate().atStartOfDay() : LocalDateTime.MIN;
-                    return dateB.compareTo(dateA);
-                })
-                .limit(5)
-                .forEach(ticket -> activites.add(DashboardDTO.ActiviteRecenteDTO.builder()
-                        .type("TICKET")
-                        .description("Ticket #" + ticket.getNumero() + " vendu")
-                        .timeAgo(calculateTimeAgo(ticket.getDate()))
-                        .build()));
+        if (isCompanyLevel) {
+            Long companyId = CompanyContextHolder.getCurrentId();
+            List<Long> agencyIds = agencyRepository.findByCompanyId(companyId).stream()
+                    .map(agency -> agency.getId())
+                    .collect(Collectors.toList());
+
+            agencyIds.stream()
+                    .flatMap(id -> ticketRepository.findByAgencyId(id).stream())
+                    .filter(ticket -> ticket.getStatus() == TicketStatus.PAYE)
+                    .sorted((a, b) -> {
+                        LocalDateTime dateA = a.getDate() != null ? a.getDate().atStartOfDay() : LocalDateTime.MIN;
+                        LocalDateTime dateB = b.getDate() != null ? b.getDate().atStartOfDay() : LocalDateTime.MIN;
+                        return dateB.compareTo(dateA);
+                    })
+                    .limit(5)
+                    .forEach(ticket -> activites.add(DashboardDTO.ActiviteRecenteDTO.builder()
+                            .type("TICKET")
+                            .description("Ticket #" + ticket.getNumero() + " vendu")
+                            .timeAgo(calculateTimeAgo(ticket.getDate()))
+                            .build()));
+        } else {
+            ticketRepository.findByAgencyId(agencyId).stream()
+                    .filter(ticket -> ticket.getStatus() == TicketStatus.PAYE)
+                    .sorted((a, b) -> {
+                        LocalDateTime dateA = a.getDate() != null ? a.getDate().atStartOfDay() : LocalDateTime.MIN;
+                        LocalDateTime dateB = b.getDate() != null ? b.getDate().atStartOfDay() : LocalDateTime.MIN;
+                        return dateB.compareTo(dateA);
+                    })
+                    .limit(5)
+                    .forEach(ticket -> activites.add(DashboardDTO.ActiviteRecenteDTO.builder()
+                            .type("TICKET")
+                            .description("Ticket #" + ticket.getNumero() + " vendu")
+                            .timeAgo(calculateTimeAgo(ticket.getDate()))
+                            .build()));
+        }
 
         return activites;
     }
-
 
     private String calculateTimeAgo(LocalDate date) {
         if (date == null) {
@@ -235,20 +453,13 @@ public class DashboardService {
     public SuperDashboardStatsDTO getDashboardStats() {
         SuperDashboardStatsDTO stats = new SuperDashboardStatsDTO();
 
-        // Total des compagnies
         stats.setTotalCompanies(companyRepository.count());
-
-        // Total des agences
         stats.setTotalAgencies(agencyRepository.count());
-
-        // Total des tickets
         stats.setTotalTickets(ticketRepository.count());
 
-        // Total des ventes (somme des prix de tous les tickets payés)
         Double totalSales = ticketRepository.sumTotalSales();
         stats.setTotalSales(totalSales != null ? totalSales : 0.0);
 
-        // Ventes mensuelles (6 derniers mois)
         stats.setMonthlySales(getMonthlySales());
 
         return stats;
@@ -263,10 +474,8 @@ public class DashboardService {
             int year = monthDate.getYear();
             int month = monthDate.getMonthValue();
 
-            // Récupérer les ventes du mois
             Double sales = ticketRepository.sumSalesByYearAndMonth(year, month);
 
-            // Nom du mois en français (3 premières lettres)
             String monthName = monthDate.getMonth()
                     .getDisplayName(TextStyle.SHORT, Locale.FRENCH)
                     .substring(0, 3);

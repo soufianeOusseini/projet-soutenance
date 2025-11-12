@@ -15,16 +15,14 @@ import java.util.List;
 @Builder
 public class DashboardDTO {
     private StatistiquesGeneralesDTO statistiquesGenerales;
-
     private RevenusDTO revenus;
-
     private ColisStatisticsDTO colisStatistics;
-
     private List<TrajetPlanifieDTO> trajetsPlanifies;
-
     private List<TrajetRepartitionDTO> trajetRepartition;
-
     private List<ActiviteRecenteDTO> activitesRecentes;
+
+    // Nouveau champ pour identifier le type de dashboard
+    private Boolean isCompanyLevel; // true si c'est un admin compagnie, false si c'est une agence
 
     @Getter
     @Setter
@@ -44,6 +42,9 @@ public class DashboardDTO {
         private Double percentageReservationsChange;
         private Long totalColis;
         private Double percentageColisChange;
+
+        // Nouveau champ uniquement pour les admins compagnie
+        private Long totalAgencies; // Nombre d'agences de la compagnie
     }
 
     @Getter

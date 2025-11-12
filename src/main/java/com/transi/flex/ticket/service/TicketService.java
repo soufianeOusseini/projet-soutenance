@@ -3,6 +3,8 @@ package com.transi.flex.ticket.service;
 import com.transi.flex.account.dto.UserDTO;
 import com.transi.flex.account.repository.UserRepository;
 import com.transi.flex.account.service.UserService;
+import com.transi.flex.agency.dao.AgencyRepository;
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.colis.dto.ColisDTO;
 import com.transi.flex.config.AgencyContextHolder;
 import com.transi.flex.config.CompanyContextHolder;
@@ -26,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @AllArgsConstructor
 @Service
@@ -37,6 +40,7 @@ public class TicketService {
     private final TripScheduleDAO tripScheduleDAO;
     private final PdfTicketService pdfTicketService;
     private final UserService userService;
+    private final AgencyRepository agencyRepository;
 
     @Transactional
     public TicketDTO save(TicketDTO ticketDTO) {
@@ -60,25 +64,23 @@ public class TicketService {
         }
 
         if (ticketDTO.getSeatNumber() != null) {
-            // Vérifier si le siège est déjà occupé
-            boolean seatTaken = repository.existsByTrajetIdAndDateAndSeatNumber(
-                    ticketDTO.getTrajetId(),
-                    ticketDTO.getDate(),
+            // Vérifier si le siège est déjà occupé POUR CE VOYAGE PRÉCIS
+            boolean seatTaken = repository.existsByScheduleAndSeatNumber(
+                    schedule.getId(),
                     ticketDTO.getSeatNumber()
             );
 
             if (seatTaken) {
-                throw new IllegalStateException("Le siège n°" + ticketDTO.getSeatNumber() + " est déjà occupé");
+                throw new IllegalStateException("Le siège n°" + ticketDTO.getSeatNumber() + " est déjà occupé pour ce voyage");
             }
 
-            // Vérifier que le numéro de siège ne dépasse pas la capacité du bus
-            int capaciteTotale = schedule.getBus().getCapacity(); // Assurez-vous que Bus a un champ capacite
+            int capaciteTotale = schedule.getBus().getCapacity();
             if (ticketDTO.getSeatNumber() > capaciteTotale) {
                 throw new IllegalStateException("Le numéro de siège ne peut pas dépasser " + capaciteTotale);
             }
         } else {
             // Attribuer automatiquement le prochain siège disponible
-            Integer nextSeatNumber = getNextAvailableSeatNumber(ticketDTO.getTrajetId(), ticketDTO.getDate(), schedule);
+            Integer nextSeatNumber = getNextAvailableSeatNumber(schedule.getId(), schedule);
             ticketDTO.setSeatNumber(nextSeatNumber);
         }
 
@@ -132,6 +134,19 @@ public class TicketService {
         }
 
         return mapper.toDto(savedTicket);
+    }
+
+    private Integer getNextAvailableSeatNumber(Long scheduleId, TripSchedule schedule) {
+        List<Integer> occupiedSeats = repository.findOccupiedSeatNumbersBySchedule(scheduleId);
+        int capaciteTotale = schedule.getBus().getCapacity();
+
+        for (int i = 1; i <= capaciteTotale; i++) {
+            if (!occupiedSeats.contains(i)) {
+                return i;
+            }
+        }
+
+        throw new IllegalStateException("Aucun siège disponible");
     }
 
     @Transactional
@@ -209,7 +224,25 @@ public class TicketService {
     }
 
     public List<TicketDTO> getAll() {
-        return mapper.toDtos(repository.findByAgencyId(AgencyContextHolder.getCurrentAgencyId()));
+        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+
+        if (agencyId != null) {
+            // Utilisateur d'agence
+            return mapper.toDtos(repository.findByAgencyId(agencyId));
+        } else {
+            // Admin compagnie
+            Long companyId = CompanyContextHolder.getCurrentId();
+            List<Long> agencyIds = agencyRepository.findByCompanyId(companyId)
+                    .stream()
+                    .map(Agency::getId)
+                    .collect(Collectors.toList());
+
+            List<Ticket> tickets = agencyIds.stream()
+                    .flatMap(id -> repository.findByAgencyId(id).stream())
+                    .collect(Collectors.toList());
+
+            return mapper.toDtos(tickets);
+        }
     }
 
     public TicketDTO getTicketById(Long id) {
@@ -318,7 +351,7 @@ public class TicketService {
     /**
      * Récupère la liste des sièges occupés pour un trajet et une date donnés
      */
-    public List<Integer> getOccupiedSeats(Long trajetId, LocalDate date) {
-        return repository.findOccupiedSeatNumbers(trajetId, date);
+    public List<Integer> getOccupiedSeats(Long scheduleId) {
+        return repository.findOccupiedSeatNumbersBySchedule(scheduleId);
     }
 }

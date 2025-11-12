@@ -60,6 +60,9 @@ public class PdfTicketService {
             if(AgencyContextHolder.getCurrentAgencyId() !=null){
                 agency = agencyRepository.findById(AgencyContextHolder.getCurrentAgencyId()).orElse(null);
             }
+            if(ticket.getAgency() !=null){
+                agency = ticket.getAgency();
+            }
             // 🔹 Générer le QR code
             String qrText = "Ticket N°: " + ticket.getNumero() + "\n" +
                     "Nom: " + (ticket.getUser() != null ? ticket.getUser().getLastName() : ticket.getClientNom()) + "\n" +

@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -57,4 +58,42 @@ public interface TicketRepository extends JpaRepository<Ticket,Long> {
 
     @Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END FROM Ticket t WHERE t.trajet.id = :trajetId AND t.date = :date AND t.seatNumber = :seatNumber AND t.status != 'ANNULE'")
     boolean existsByTrajetIdAndDateAndSeatNumber(@Param("trajetId") Long trajetId, @Param("date") LocalDate date, @Param("seatNumber") Integer seatNumber);
+
+    @Query("SELECT t.seatNumber FROM Ticket t " +
+            "WHERE t.trajet.id = :trajetId " +
+            "AND t.date = :date " +
+            "AND t.heureDepart = :heureDepart " +
+            "AND t.status != 'ANNULE' " +
+            "AND t.status != 'EXPIRE' " +
+            "AND t.seatNumber IS NOT NULL")
+    List<Integer> findOccupiedSeatNumbers(
+            @Param("trajetId") Long trajetId,
+            @Param("date") LocalDate date,
+            @Param("heureDepart") LocalTime heureDepart
+    );
+
+    // OU plus simple avec le scheduleId
+    @Query("SELECT t.seatNumber FROM Ticket t " +
+            "JOIN TripSchedule s ON t.trajet.id = s.trajet.id " +
+            "AND t.date = s.dateDepart " +
+            "AND t.heureDepart = s.heureDepart " +
+            "WHERE s.id = :scheduleId " +
+            "AND t.status != 'ANNULE' " +
+            "AND t.status != 'EXPIRE' " +
+            "AND t.seatNumber IS NOT NULL")
+    List<Integer> findOccupiedSeatNumbersBySchedule(@Param("scheduleId") Long scheduleId);
+
+    @Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END FROM Ticket t " +
+            "JOIN TripSchedule s ON t.trajet.id = s.trajet.id " +
+            "AND t.date = s.dateDepart " +
+            "AND t.heureDepart = s.heureDepart " +
+            "WHERE s.id = :scheduleId " +
+            "AND t.seatNumber = :seatNumber " +
+            "AND t.status != 'ANNULE' " +
+            "AND t.status != 'EXPIRE'")
+    boolean existsByScheduleAndSeatNumber(
+            @Param("scheduleId") Long scheduleId,
+            @Param("seatNumber") Integer seatNumber
+    );
 }
+

@@ -9,6 +9,7 @@ import com.transi.flex.bus.repository.BusRepository;
 import com.transi.flex.company.model.Company;
 import com.transi.flex.company.repository.CompanyRepository;
 import com.transi.flex.config.AgencyContextHolder;
+import com.transi.flex.config.CompanyContextHolder;
 import com.transi.flex.file.enums.FileType;
 import com.transi.flex.file.service.FileUtility;
 import jakarta.persistence.EntityNotFoundException;
@@ -21,6 +22,7 @@ import com.transi.flex.agency.dao.AgencyRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -62,9 +64,27 @@ public class BusService {
         return mapper.toDto(bus);
     }
 
-    public List<BusDTO> getAll(){
-        List<Bus> buses = busRepository.findByAgencyId(AgencyContextHolder.getCurrentAgencyId());
-        return mapper.toDtos(buses);
+    public List<BusDTO> getAll() {
+        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+
+        if (agencyId != null) {
+            // Utilisateur d'agence
+            List<Bus> buses = busRepository.findByAgencyId(agencyId);
+            return mapper.toDtos(buses);
+        } else {
+            // Admin compagnie
+            Long companyId = CompanyContextHolder.getCurrentId();
+            List<Long> agencyIds = agencyRepository.findByCompanyId(companyId)
+                    .stream()
+                    .map(Agency::getId)
+                    .collect(Collectors.toList());
+
+            List<Bus> buses = agencyIds.stream()
+                    .flatMap(id -> busRepository.findByAgencyId(id).stream())
+                    .collect(Collectors.toList());
+
+            return mapper.toDtos(buses);
+        }
     }
 
 

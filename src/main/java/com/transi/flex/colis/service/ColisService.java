@@ -10,6 +10,7 @@ import com.transi.flex.colis.model.Colis;
 import com.transi.flex.colis.repository.ColisRepository;
 import com.transi.flex.company.repository.CompanyRepository;
 import com.transi.flex.config.AgencyContextHolder;
+import com.transi.flex.config.CompanyContextHolder;
 import com.transi.flex.pdf.PdfTicketService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -21,6 +22,7 @@ import com.transi.flex.agency.dao.AgencyRepository;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -32,8 +34,26 @@ public class ColisService {
     private final AgencyRepository agencyRepository;
     private final UserService userService;
 
-    public List<ColisDTO> getAll(){
-        return mapper.toDtos(repository.findByAgencyId(AgencyContextHolder.getCurrentAgencyId()));
+    public List<ColisDTO> getAll() {
+        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+
+        if (agencyId != null) {
+            // Utilisateur d'agence
+            return mapper.toDtos(repository.findByAgencyId(agencyId));
+        } else {
+            // Admin compagnie
+            Long companyId = CompanyContextHolder.getCurrentId();
+            List<Long> agencyIds = agencyRepository.findByCompanyId(companyId)
+                    .stream()
+                    .map(Agency::getId)
+                    .collect(Collectors.toList());
+
+            List<Colis> colis = agencyIds.stream()
+                    .flatMap(id -> repository.findByAgencyId(id).stream())
+                    .collect(Collectors.toList());
+
+            return mapper.toDtos(colis);
+        }
     }
 
     public ColisDTO save(ColisDTO dto){

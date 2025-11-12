@@ -17,6 +17,7 @@ import lombok.Setter;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @AllArgsConstructor
@@ -27,8 +28,23 @@ public class TrajetService {
     private final AgencyRepository agencyRepository;
 
 
-    public List<TrajetDTO> getAll(){
-        return mapper.toDtos(repository.findByAgencyId(AgencyContextHolder.getCurrentAgencyId()));
+    public List<TrajetDTO> getAll() {
+        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+
+        if (agencyId != null) {
+            return mapper.toDtos(repository.findByAgencyId(agencyId));
+        } else {
+            Long companyId = CompanyContextHolder.getCurrentId();
+            List<Long> agencyIds = agencyRepository.findByCompanyId(companyId)
+                    .stream()
+                    .map(Agency::getId)
+                    .collect(Collectors.toList());
+
+            return agencyIds.stream()
+                    .flatMap(id -> repository.findByAgencyId(id).stream())
+                    .map(mapper::toDto)
+                    .collect(Collectors.toList());
+        }
     }
 
     public TrajetDTO save(TrajetDTO dto){

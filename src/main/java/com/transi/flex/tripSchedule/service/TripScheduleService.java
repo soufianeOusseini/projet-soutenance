@@ -2,6 +2,7 @@ package com.transi.flex.tripSchedule.service;
 
 import com.transi.flex.agency.dao.AgencyRepository;
 import com.transi.flex.agency.mapper.AgencyMapper;
+import com.transi.flex.agency.model.Agency;
 import com.transi.flex.agency.service.AgencyService;
 import com.transi.flex.bus.mapper.BusMapper;
 import com.transi.flex.bus.service.BusService;
@@ -9,6 +10,7 @@ import com.transi.flex.company.dto.CompanyDTO;
 import com.transi.flex.company.model.Company;
 import com.transi.flex.company.service.CompanyService;
 import com.transi.flex.config.AgencyContextHolder;
+import com.transi.flex.config.CompanyContextHolder;
 import com.transi.flex.driver.mapper.DriverMapper;
 import com.transi.flex.driver.service.DriverService;
 import com.transi.flex.trajet.mapper.TrajetMapper;
@@ -26,6 +28,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -57,7 +60,25 @@ public class TripScheduleService {
 
 
     public List<ScheduleDTO> getAllSchedules() {
-        return mapper.toDtos(tripScheduleRepository.findByAgencyId(AgencyContextHolder.getCurrentAgencyId()));
+        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+
+        if (agencyId != null) {
+            // Utilisateur d'agence
+            return mapper.toDtos(tripScheduleRepository.findByAgencyId(agencyId));
+        } else {
+            // Admin compagnie
+            Long companyId = CompanyContextHolder.getCurrentId();
+            List<Long> agencyIds = agencyRepository.findByCompanyId(companyId)
+                    .stream()
+                    .map(Agency::getId)
+                    .collect(Collectors.toList());
+
+            List<TripSchedule> schedules = agencyIds.stream()
+                    .flatMap(id -> tripScheduleRepository.findByAgencyId(id).stream())
+                    .collect(Collectors.toList());
+
+            return mapper.toDtos(schedules);
+        }
     }
 
     public Optional<TripSchedule> getScheduleById(Long id) {
@@ -67,7 +88,23 @@ public class TripScheduleService {
 
 
     public List<TripSchedule> getSchedulesByDate(LocalDate date) {
-        return tripScheduleRepository.findByDateAndAgencyId(date, AgencyContextHolder.getCurrentAgencyId());
+        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+
+        if (agencyId != null) {
+            // Utilisateur d'agence
+            return tripScheduleRepository.findByDateAndAgencyId(date, agencyId);
+        } else {
+            // Admin compagnie
+            Long companyId = CompanyContextHolder.getCurrentId();
+            List<Long> agencyIds = agencyRepository.findByCompanyId(companyId)
+                    .stream()
+                    .map(Agency::getId)
+                    .collect(Collectors.toList());
+
+            return agencyIds.stream()
+                    .flatMap(id -> tripScheduleRepository.findByDateAndAgencyId(date, id).stream())
+                    .collect(Collectors.toList());
+        }
     }
 
     public TripSchedule createSchedule(TripScheduleDTO scheduleDTO) throws Exception {
@@ -140,8 +177,27 @@ public class TripScheduleService {
 
     // Modifier la méthode existante pour ne récupérer que les planifications avec places disponibles
     public List<ScheduleDTO> getSchedulesByDateRange(LocalDate startDate, LocalDate endDate) {
-        return mapper.toDtos(tripScheduleRepository.findAvailableSchedulesByDateRangeAndAgencyId(
-                startDate, endDate, AgencyContextHolder.getCurrentAgencyId()));
+        Long agencyId = AgencyContextHolder.getCurrentAgencyId();
+
+        if (agencyId != null) {
+            // Utilisateur d'agence
+            return mapper.toDtos(tripScheduleRepository.findAvailableSchedulesByDateRangeAndAgencyId(
+                    startDate, endDate, agencyId));
+        } else {
+            // Admin compagnie
+            Long companyId = CompanyContextHolder.getCurrentId();
+            List<Long> agencyIds = agencyRepository.findByCompanyId(companyId)
+                    .stream()
+                    .map(Agency::getId)
+                    .collect(Collectors.toList());
+
+            List<TripSchedule> schedules = agencyIds.stream()
+                    .flatMap(id -> tripScheduleRepository.findAvailableSchedulesByDateRangeAndAgencyId(
+                            startDate, endDate, id).stream())
+                    .collect(Collectors.toList());
+
+            return mapper.toDtos(schedules);
+        }
     }
 
     // Nouvelle méthode pour récupérer une planification spécifique

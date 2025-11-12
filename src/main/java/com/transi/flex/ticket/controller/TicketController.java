@@ -192,11 +192,9 @@ public class TicketController {
     }
 
 
-    @GetMapping("/occupied-seats/{trajetId}/{date}")
-    public ResponseEntity<List<Integer>> getOccupiedSeats(
-            @PathVariable Long trajetId,
-            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        List<Integer> occupiedSeats = service.getOccupiedSeats(trajetId, date);
+    @GetMapping("/occupied-seats/{scheduleId}")
+    public ResponseEntity<List<Integer>> getOccupiedSeats(@PathVariable Long scheduleId) {
+        List<Integer> occupiedSeats = service.getOccupiedSeats(scheduleId);
         return ResponseEntity.ok(occupiedSeats);
     }
 }

@@ -117,6 +117,7 @@ public class PaygateTransactionImpl implements PaygateService {
     @Override
     public CheckResponseDto checkTransactioStatus(CheckTransactionDto data) {
 
+        data.setAuth_token(AUTH_TOKEN);
         Mono<CheckResponseDto> result = webClient
                 .post()
                 .uri("/status")
